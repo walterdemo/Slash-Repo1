@@ -9,10 +9,16 @@
 #include "Bird.generated.h"//this one has to be the last one to be included
 
 
-class UInputAction;
+
 class UCapsuleComponent;
 class USkeletalMeshComponent;
 class UInputMappingContext;
+class UInputAction;
+
+class UPawnMovementComponent;
+class USpringArmComponent;
+class UCameraComponent;
+
 UCLASS()
 class SLASH_API ABird : public APawn
 {
@@ -42,10 +48,24 @@ protected:
 
 	void Move(const FInputActionValue& Value);
 
+	UPROPERTY(VisibleAnywhere)
+	UPawnMovementComponent* MovementComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* LookAction;
+
+	void Look(const FInputActionValue& Value);
+
 private:
 	UPROPERTY(VisibleAnywhere)
 	UCapsuleComponent* Capsule;
 
 	UPROPERTY(VisibleAnywhere)
 	USkeletalMeshComponent* BirdMesh;
+
+	UPROPERTY(VisibleAnywhere)
+	USpringArmComponent* SpringArm;
+
+	UPROPERTY(VisibleAnywhere)
+	UCameraComponent* ViewCamera;
 };

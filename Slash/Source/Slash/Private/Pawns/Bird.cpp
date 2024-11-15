@@ -7,6 +7,11 @@
 #include "Components/InputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "Camera/CameraComponent.h"
+
+#include "GameFramework/FloatingPawnMovement.h"
+
+#include "GameFramework/SpringArmComponent.h"
 
 // Sets default values
 ABird::ABird()
@@ -23,7 +28,21 @@ ABird::ABird()
 	BirdMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BirdMesh"));
 	BirdMesh->SetupAttachment(GetRootComponent());
 
+	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
+	SpringArm->SetupAttachment(GetRootComponent());
+	SpringArm->TargetArmLength = 300.f;
+
+	ViewCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
+	ViewCamera->SetupAttachment(SpringArm);
+
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
+
+	MovementComponent = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("MovementComponent"));
+
+	this->bUseControllerRotationPitch = true;
+	this->bUseControllerRotationYaw = true;
+
+
 }
 
 // Called when the game starts or when spawned
@@ -50,10 +69,22 @@ void ABird::MoveForward(float Value)
 
 void ABird::Move(const FInputActionValue& Value)
 {
-	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue)
+	const float DirectionValue = Value.Get<float>();
+	if (Controller && (DirectionValue != 0.f))
+	{	
+		FVector Forward = GetActorForwardVector();
+		AddMovementInput(Forward, DirectionValue);
+		//UE_LOG(LogTemp, Warning, TEXT("IA_Move triggered"));
+	}
+}
+
+void ABird::Look(const FInputActionValue& Value)
+{
+	const FVector2D LookAxisValue = Value.Get<FVector2D>();
+	if (GetController())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("IA_Move triggered"));
+		AddControllerYawInput(LookAxisValue.X);
+		AddControllerPitchInput(LookAxisValue.Y);
 	}
 }
 
@@ -72,6 +103,7 @@ void ABird::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ABird::Move);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ABird::Look);
 	}
 	//PlayerInputComponent->BindAxis(FName("MoveForward"), this, &ABird::MoveForward);
 
