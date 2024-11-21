@@ -52,6 +52,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Input)
 	TObjectPtr<UInputAction> LookAction;
 
+	UPROPERTY(EditAnywhere, Category = Input)
+	TObjectPtr<UInputAction> JumpAction;
+
 	void MoveChar(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 
@@ -60,6 +63,14 @@ protected:
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	//action inputs
+	virtual void Jump() override;
+	/*
+	void Dodge();
+	void EKeyPressed();
+	virtual void Attack() override;
+	*/
 
 private:
 

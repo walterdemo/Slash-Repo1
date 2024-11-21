@@ -107,6 +107,17 @@ void ASlashCharacter::BeginPlay()
 	
 }
 
+void ASlashCharacter::Jump()
+{
+	Super::Jump();
+	/*
+	if (IsUnoccupied())
+	{
+		Super::Jump();
+	}*/
+}
+
+
 // Called every frame
 void ASlashCharacter::Tick(float DeltaTime)
 {
@@ -124,6 +135,9 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(MovementAction, ETriggerEvent::Triggered, this, &ASlashCharacter::MoveChar);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Look);
 		//EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ABird::Look);
+
+		//binding actions
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &Super::Jump);
 	}
 
 
