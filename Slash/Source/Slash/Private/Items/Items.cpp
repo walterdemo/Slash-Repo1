@@ -7,6 +7,10 @@
 #include "Slash/Slash.h"
 #include "Slash/DebugMacros.h"
 
+//Sphere component
+#include "Components/SphereComponent.h"
+
+
 // Sets default values
 AItems::AItems()
 {
@@ -16,6 +20,11 @@ AItems::AItems()
 	ItemMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ItemMeshComponent"));
 	RootComponent = ItemMesh;
 
+	Sphere = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere"));
+	Sphere->SetupAttachment(GetRootComponent());
+
+
+
 }
 
 // Called when the game starts or when spawned
@@ -23,6 +32,9 @@ void AItems::BeginPlay()
 {
 	Super::BeginPlay();
 
+	//accesing its delegate, passing the value to the function OnSphereOverlap of this code
+	Sphere->OnComponentBeginOverlap.AddDynamic(this, &AItems::OnSphereOverlap);
+	Sphere->OnComponentEndOverlap.AddDynamic(this, &AItems::OnSphereOverlapEnd);
 
 	/*
 	UE_LOG(LogTemp, Warning, TEXT("Begin play called!"));
@@ -41,7 +53,7 @@ void AItems::BeginPlay()
 	}
 	*/
 
-	UWorld* World = GetWorld();
+	//UWorld* World = GetWorld();
 	
 
 	/*
@@ -93,6 +105,26 @@ float AItems::TransformedSin()
 float AItems::TransformedCos()
 {
 	return Amplitud * FMath::Cos(RunningTime * TimeConstant);
+}
+
+void AItems::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	const FString OtherActorName = OtherActor->GetName();
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(1, 1.f, FColor::Red, OtherActorName);
+	}
+
+}
+
+void AItems::OnSphereOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	const FString OtherActorNameEnd = OtherActor->GetName();
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(1, 1.f, FColor::Green, OtherActorNameEnd);
+	}
+
 }
 
 // Called every frame
