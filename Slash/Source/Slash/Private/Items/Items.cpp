@@ -34,7 +34,7 @@ void AItems::BeginPlay()
 
 	//accesing its delegate, passing the value to the function OnSphereOverlap of this code
 	Sphere->OnComponentBeginOverlap.AddDynamic(this, &AItems::OnSphereOverlap);
-	Sphere->OnComponentEndOverlap.AddDynamic(this, &AItems::OnSphereOverlapEnd);
+	Sphere->OnComponentEndOverlap.AddDynamic(this, &AItems::OnSphereEndOverlap);
 
 	/*
 	UE_LOG(LogTemp, Warning, TEXT("Begin play called!"));
@@ -117,7 +117,7 @@ void AItems::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* O
 
 }
 
-void AItems::OnSphereOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+void AItems::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	const FString OtherActorNameEnd = OtherActor->GetName();
 	if (GEngine)
