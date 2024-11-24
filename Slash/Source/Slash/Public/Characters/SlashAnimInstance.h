@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
+#include "CharacterTypes.h" //included for being ablo to use the enum ECharacterState
+
 #include "SlashAnimInstance.generated.h"
 
 /**
@@ -35,4 +37,6 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = Movement)
 	bool IsFalling;
 
+
+	ECharacterState CharacterState;
 };

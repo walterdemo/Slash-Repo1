@@ -133,6 +133,7 @@ void ASlashCharacter::EKeyPressed()
 	{
 		//the we tell the wepon to get attached
 		OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"));
+		CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
 	}
 }
 

@@ -8,6 +8,10 @@
 #include "InputActionValue.h" //TODO : remember how and why I  did use this variable
 //I think is because is a two dimensional Value and it has a different format
 //
+//bringing values like the Enum
+#include "CharacterTypes.h"
+
+
 #include <AMD/Amf/core/Variant.h>
 
 #include "SlashCharacter.generated.h"
@@ -25,7 +29,18 @@ class USpringArmComponent;
 class UCameraComponent;
 class UGroomComponent;
 
-class AItema;
+class AItems;
+
+/*
+//We will declare it on CharacterTypesHeader.h
+UENUM(BlueprintType) //a type that can be used in blueprint
+enum class ECharacterState : uint8 //u because it's unsigned no negative values
+{
+	// the macro is tha name that will be shown in blueprint
+	ECS_Unequipped UMETA(DisplayName = "Unequipped"),
+	ECS_EquippedOneHandedWeapon UMETA(DisplayName = "Equipped One-Handed Weapon"),
+	ECS_EquippedTwoHandedWeapon UMETA(DisplayName = "Equipped Two-Handed Weapon")
+};*/
 
 UCLASS()
 class SLASH_API ASlashCharacter : public ACharacter
@@ -81,6 +96,8 @@ protected:
 
 private:
 
+	ECharacterState CharacterState = ECharacterState::ECS_Unequipped;
+
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USpringArmComponent> CameraBoom;
 
@@ -95,11 +112,14 @@ private:
 	TObjectPtr<UGroomComponent> Eyebrows;
 	
 	UPROPERTY(VisibleInstanceOnly)
-	TObjectPtr<AItema> OverlappingItem;
+	TObjectPtr<AItems> OverlappingItem;
 
 public:
 	//optimize code of a getter or setter in one line
-	FORCEINLINE void SetOverlappingItem(AItema* Item) { OverlappingItem = Item; }
+	FORCEINLINE void SetOverlappingItem(AItems* Item) { OverlappingItem = Item; }
+
+	//the const means that this function will not be able to change anything in it, maybe the Enum
+	FORCEINLINE ECharacterState GetCharacterState() const { return CharacterState; } //Getting the value for being able to know it when it is called in SlashAnimInstance
 
 
 
