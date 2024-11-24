@@ -25,6 +25,8 @@ class USpringArmComponent;
 class UCameraComponent;
 class UGroomComponent;
 
+class AItema;
+
 UCLASS()
 class SLASH_API ASlashCharacter : public ACharacter
 {
@@ -55,6 +57,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Input)
 	TObjectPtr<UInputAction> JumpAction;
 
+	UPROPERTY(EditAnywhere, Category = Input)
+	TObjectPtr<UInputAction> EquipAction;
+
 	void MoveChar(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 
@@ -66,6 +71,8 @@ protected:
 
 	//action inputs
 	virtual void Jump() override;
+	void EKeyPressed();
+
 	/*
 	void Dodge();
 	void EKeyPressed();
@@ -87,4 +94,13 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = Hair)
 	TObjectPtr<UGroomComponent> Eyebrows;
 	
+	UPROPERTY(VisibleInstanceOnly)
+	TObjectPtr<AItema> OverlappingItem;
+
+public:
+	//optimize code of a getter or setter in one line
+	FORCEINLINE void SetOverlappingItem(AItema* Item) { OverlappingItem = Item; }
+
+
+
 };

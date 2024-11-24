@@ -9,6 +9,7 @@
 
 //Sphere component
 #include "Components/SphereComponent.h"
+#include "Characters/SlashCharacter.h"
 
 
 // Sets default values
@@ -109,22 +110,37 @@ float AItems::TransformedCos()
 
 void AItems::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	//TODO we have to fully understand how this works he castin
+	TObjectPtr<ASlashCharacter> SlashCharacter = Cast<ASlashCharacter>(OtherActor);
+	if (SlashCharacter)
+	{
+		SlashCharacter->SetOverlappingItem(this);
+	}
+	/*
 	const FString OtherActorName = OtherActor->GetName();
 	if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(1, 1.f, FColor::Red, OtherActorName);
 	}
-
+	*/
 }
 
 void AItems::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	const FString OtherActorNameEnd = OtherActor->GetName();
+	
+	TObjectPtr<ASlashCharacter> SlashCharacter = Cast<ASlashCharacter>(OtherActor);
+	if (SlashCharacter)
+	{
+		SlashCharacter->SetOverlappingItem(nullptr);
+	}
+
+	//const FString OtherActorNameEnd = OtherActor->GetName();
+	/*
 	if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(1, 1.f, FColor::Green, OtherActorNameEnd);
 	}
-
+	*/
 }
 
 // Called every frame
@@ -171,7 +187,7 @@ void AItems::Tick(float DeltaTime)
 	*/
 
 	//Rotation Challenge
-	AddActorWorldRotation(FRotator(0.f, RotationSpeed * DeltaTime, 0.f));
+	//AddActorWorldRotation(FRotator(0.f, RotationSpeed * DeltaTime, 0.f));
 
 
 }

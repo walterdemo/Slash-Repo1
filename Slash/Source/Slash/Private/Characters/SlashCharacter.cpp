@@ -19,6 +19,10 @@
 //Setting fro groom
 #include "GroomComponent.h"
 
+//weapon and item 
+#include "Items/Items.h"
+#include "Items/Weapons/Weapon.h"
+
 // Sets default values
 ASlashCharacter::ASlashCharacter()
 {
@@ -117,6 +121,21 @@ void ASlashCharacter::Jump()
 	}*/
 }
 
+void ASlashCharacter::EKeyPressed()
+{
+	//TODO we have to fully understand how this works
+	//We are ggonna cast the overlapping item to the A weapon type
+	//equal to the result of a cast of Aweapon castin overlappingItem
+	TObjectPtr<AWeapon> OverlappingWeapon = Cast<AWeapon>(OverlappingItem);
+	//OverlappingItem is Set on Item.cpp when item is overlapping the character
+	//it will return null pointer if it is not overlapping
+	if (OverlappingWeapon)
+	{
+		//the we tell the wepon to get attached
+		OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"));
+	}
+}
+
 
 // Called every frame
 void ASlashCharacter::Tick(float DeltaTime)
@@ -137,7 +156,8 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		//EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ABird::Look);
 
 		//binding actions
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &Super::Jump);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Jump);
+		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ASlashCharacter::EKeyPressed);
 	}
 
 

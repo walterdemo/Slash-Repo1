@@ -13,7 +13,9 @@ UCLASS()
 class SLASH_API AWeapon : public AItems
 {
 	GENERATED_BODY()
-	
+public:
+	void Equip(TObjectPtr<USceneComponent> InParent, FName InScoketName);
+
 protected:
 	virtual void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) override;
 
