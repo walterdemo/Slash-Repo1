@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Items/Items.h"
+#include "Items/Item.h"
 #include "Weapon.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class SLASH_API AWeapon : public AItems
+class SLASH_API AWeapon : public AItem
 {
 	GENERATED_BODY()
 public:

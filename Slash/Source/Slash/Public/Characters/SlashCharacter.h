@@ -13,7 +13,7 @@
 #include "SlashCharacter.generated.h"
 
 
-
+//having U or A means they exists somewhere else
 
 class UInputMappingContext;
 class UInputAction;
@@ -25,7 +25,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class UGroomComponent;
 
-class AItema;
+class AItem;
 
 UCLASS()
 class SLASH_API ASlashCharacter : public ACharacter
@@ -95,11 +95,11 @@ private:
 	TObjectPtr<UGroomComponent> Eyebrows;
 	
 	UPROPERTY(VisibleInstanceOnly)
-	TObjectPtr<AItema> OverlappingItem;
+	TObjectPtr<AItem> OverlappingItem;
 
 public:
 	//optimize code of a getter or setter in one line
-	FORCEINLINE void SetOverlappingItem(AItema* Item) { OverlappingItem = Item; }
+	FORCEINLINE void SetOverlappingItem(AItems* Item) { OverlappingItem = Item; }
 
 
 

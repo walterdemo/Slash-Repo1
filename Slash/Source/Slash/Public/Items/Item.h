@@ -4,18 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Items.generated.h"
+#include "Item.generated.h"
 
 class USphereComponent;
 
 UCLASS()
-class SLASH_API AItems : public AActor
+class SLASH_API AItem : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	AItems();
+	AItem();
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -65,7 +65,7 @@ private:
 };
 
 template<typename T>
-inline T AItems::Avg(T First, T Second)
+inline T AItem::Avg(T First, T Second)
 {
 	return (First + Second)/2;
 }
