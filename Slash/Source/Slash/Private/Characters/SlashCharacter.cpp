@@ -20,7 +20,7 @@
 #include "GroomComponent.h"
 
 //weapon and item 
-#include "Items/Item.h"
+#include "Items/Items.h"
 #include "Items/Weapons/Weapon.h"
 
 // Sets default values

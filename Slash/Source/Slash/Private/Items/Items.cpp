@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Items/Item.h"
+#include "Items/Items.h"
 #include "DrawDebugHelpers.h"
 
 #include "Slash/Slash.h"
@@ -13,7 +13,7 @@
 
 
 // Sets default values
-AItem::AItem()
+AItems::AItems()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
@@ -29,7 +29,7 @@ AItem::AItem()
 }
 
 // Called when the game starts or when spawned
-void AItem::BeginPlay()
+void AItems::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -98,17 +98,17 @@ void AItem::BeginPlay()
 	*/
 }
 
-float AItem::TransformedSin()
+float AItems::TransformedSin()
 {
 	return Amplitud * FMath::Sin(RunningTime * TimeConstant);
 }
 
-float AItem::TransformedCos()
+float AItems::TransformedCos()
 {
 	return Amplitud * FMath::Cos(RunningTime * TimeConstant);
 }
 
-void AItem::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AItems::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	//TODO we have to fully understand how this works he castin
 	TObjectPtr<ASlashCharacter> SlashCharacter = Cast<ASlashCharacter>(OtherActor);
@@ -125,7 +125,7 @@ void AItem::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 	*/
 }
 
-void AItem::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+void AItems::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	
 	TObjectPtr<ASlashCharacter> SlashCharacter = Cast<ASlashCharacter>(OtherActor);
@@ -144,7 +144,7 @@ void AItem::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 }
 
 // Called every frame
-void AItem::Tick(float DeltaTime)
+void AItems::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
