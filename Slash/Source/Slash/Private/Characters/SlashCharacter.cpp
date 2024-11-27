@@ -23,6 +23,9 @@
 #include "Items/Items.h"
 #include "Items/Weapons/Weapon.h"
 
+//UAnimMontage https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Engine/Animation/UAnimMontage
+#include "Animation/AnimMontage.h"
+
 // Sets default values
 ASlashCharacter::ASlashCharacter()
 {
@@ -137,6 +140,30 @@ void ASlashCharacter::EKeyPressed()
 	}
 }
 
+void ASlashCharacter::Attack()
+{
+	TObjectPtr<UAnimInstance> AnimInstance = GetMesh()->GetAnimInstance();
+	
+	if (AnimInstance && AttackMontage)
+	{
+		AnimInstance->Montage_Play(AttackMontage);
+		int32 Selection = FMath::RandRange(0, 1); //Random number from 0 to 1
+		FName SectionName = FName();
+		switch (Selection)
+		{
+		case 0:
+			SectionName = FName("Attack1");
+			break;
+		case 1:
+			SectionName = FName("Attack2");
+			break;
+		default:
+			break;
+		}
+		AnimInstance->Montage_JumpToSection(SectionName, AttackMontage);
+	}
+}
+
 
 // Called every frame
 void ASlashCharacter::Tick(float DeltaTime)
@@ -159,6 +186,7 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		//binding actions
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Jump);
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ASlashCharacter::EKeyPressed);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Attack);
 	}
 
 

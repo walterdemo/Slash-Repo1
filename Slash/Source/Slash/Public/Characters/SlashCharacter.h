@@ -30,7 +30,7 @@ class UCameraComponent;
 class UGroomComponent;
 
 class AItems;
-
+class UAnimMontage;
 /*
 //We will declare it on CharacterTypesHeader.h
 UENUM(BlueprintType) //a type that can be used in blueprint
@@ -75,6 +75,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Input)
 	TObjectPtr<UInputAction> EquipAction;
 
+	UPROPERTY(EditAnywhere, Category = Input)
+	TObjectPtr<UInputAction> AttackAction;
+
 	void MoveChar(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 
@@ -87,7 +90,7 @@ protected:
 	//action inputs
 	virtual void Jump() override;
 	void EKeyPressed();
-
+	void Attack();
 	/*
 	void Dodge();
 	void EKeyPressed();
@@ -113,6 +116,13 @@ private:
 	
 	UPROPERTY(VisibleInstanceOnly)
 	TObjectPtr<AItems> OverlappingItem;
+
+	/*
+	*Animation montages
+	*/
+	UPROPERTY(EditDefaultsOnly, Category = Montages)
+	TObjectPtr<UAnimMontage> AttackMontage;
+
 
 public:
 	//optimize code of a getter or setter in one line
