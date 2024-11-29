@@ -10,6 +10,7 @@ void AWeapon::Equip(TObjectPtr<USceneComponent> InParent, FName InScoketName)
 {
 	FAttachmentTransformRules TransformRules(EAttachmentRule::SnapToTarget, true);
 	ItemMesh->AttachToComponent(InParent, TransformRules, InScoketName);
+	ItemState = EItemState::EIS_Equiped;
 }
 
 void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)

@@ -57,26 +57,28 @@ ASlashCharacter::ASlashCharacter()
 
 void ASlashCharacter::MoveChar(const FInputActionValue& Value)
 {
-	const FVector2D MovementVector = Value.Get<FVector2D>(); // if i press w x value will get 1 if i press d , y value will get 1, and the opposite will happens
+	if (ActionState == EActionState::EAS_Unoccupied)
+	{
+		const FVector2D MovementVector = Value.Get<FVector2D>(); // if i press w x value will get 1 if i press d , y value will get 1, and the opposite will happens
 
-	//const FRotator Rotation = Controller->GetControlRotation();
+		//const FRotator Rotation = Controller->GetControlRotation();
 
-	/*
-	const FVector Forward = GetActorForwardVector();
-	AddMovementInput(Forward, MovementVector.Y);
-	const FVector Right = GetActorRightVector();
-	AddMovementInput(Right, MovementVector.X);
-	*/
+		/*
+		const FVector Forward = GetActorForwardVector();
+		AddMovementInput(Forward, MovementVector.Y);
+		const FVector Right = GetActorRightVector();
+		AddMovementInput(Right, MovementVector.X);
+		*/
 
-	const FRotator Rotation = Controller->GetControlRotation();
-	const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
 
-	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X); //Axes is plural
-	AddMovementInput(ForwardDirection, MovementVector.Y);
+		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X); //Axes is plural
+		AddMovementInput(ForwardDirection, MovementVector.Y);
 
-	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y); //Axes is plural
-	AddMovementInput(RightDirection, MovementVector.X);
-
+		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y); //Axes is plural
+		AddMovementInput(RightDirection, MovementVector.X);
+	}
 
 
 
@@ -142,12 +144,23 @@ void ASlashCharacter::EKeyPressed()
 
 void ASlashCharacter::Attack()
 {
+	if (CanAttack()) // can Attack is a bool variable which determined the state of the character down below
+	{
+		PlayAttackMontage();
+		ActionState = EActionState::EAS_Attacking;
+	}
+}
+
+void ASlashCharacter::PlayAttackMontage()
+{
 	TObjectPtr<UAnimInstance> AnimInstance = GetMesh()->GetAnimInstance();
-	
+
 	if (AnimInstance && AttackMontage)
 	{
 		AnimInstance->Montage_Play(AttackMontage);
-		int32 Selection = FMath::RandRange(0, 1); //Random number from 0 to 1
+		//this is constant because once setted here it will not change again
+		const int32 Selection = FMath::RandRange(0, 1); //Random number from 0 to 1
+		//SectionName is not constant because it is expected to change below
 		FName SectionName = FName();
 		switch (Selection)
 		{
@@ -162,6 +175,18 @@ void ASlashCharacter::Attack()
 		}
 		AnimInstance->Montage_JumpToSection(SectionName, AttackMontage);
 	}
+}
+
+void ASlashCharacter::AttackEnd()
+{
+	ActionState = EActionState::EAS_Unoccupied;
+}
+
+bool ASlashCharacter::CanAttack()
+{
+
+	return ActionState == EActionState::EAS_Unoccupied &&
+		CharacterState != ECharacterState::ECS_Unequipped;
 }
 
 

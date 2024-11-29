@@ -59,6 +59,9 @@ public:
 protected:
 	//void MoveForward(floatValue);
 
+	/*
+	Input action properties and variables
+	*/
 	UPROPERTY(EditAnywhere, Category = Input)
 	TObjectPtr<UInputMappingContext> SlashContext;
 	//UInputMappingContext* SlashContext; //old way of declaring apointer
@@ -78,8 +81,6 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Input)
 	TObjectPtr<UInputAction> AttackAction;
 
-	void MoveChar(const FInputActionValue& Value);
-	void Look(const FInputActionValue& Value);
 
 	//UPROPERTY(VisibleAnywhere)
 	//TObjectPtr<UCharMovementComponent> MovementComponent;
@@ -87,19 +88,33 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	//action inputs
+	/*
+	Input action properties and variables
+	*/
+	void MoveChar(const FInputActionValue& Value);
+	void Look(const FInputActionValue& Value);
 	virtual void Jump() override;
 	void EKeyPressed();
 	void Attack();
 	/*
 	void Dodge();
-	void EKeyPressed();
 	virtual void Attack() override;
 	*/
+
+	/*
+	* Play montage functions - this is called refactoring for avoid having to much code in one space
+	*/
+	void PlayAttackMontage();
+	UFUNCTION(BlueprintCallable)
+	void AttackEnd();
+	bool CanAttack();
 
 private:
 
 	ECharacterState CharacterState = ECharacterState::ECS_Unequipped;
+	
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	EActionState ActionState = EActionState::EAS_Unoccupied;
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USpringArmComponent> CameraBoom;

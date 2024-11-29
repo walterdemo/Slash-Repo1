@@ -148,6 +148,12 @@ void AItems::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (ItemState == EItemState::EIS_Hovering)
+	{
+		AddActorWorldOffset(FVector(0.f, 0.f, TransformedSin()));
+	}
+
+
 	/*
 	//Movement rate in units of cms
 	float MovementRate = 50.f;
