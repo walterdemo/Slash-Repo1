@@ -7,7 +7,7 @@
 #include "Weapon.generated.h"
 
 /**
- * 
+ *CommentSomething here
  */
 UCLASS()
 class SLASH_API AWeapon : public AItems
