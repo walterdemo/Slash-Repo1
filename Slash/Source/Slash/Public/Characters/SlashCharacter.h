@@ -31,6 +31,8 @@ class UGroomComponent;
 
 class AItems;
 class UAnimMontage;
+
+class AWeapon;
 /*
 //We will declare it on CharacterTypesHeader.h
 UENUM(BlueprintType) //a type that can be used in blueprint
@@ -110,6 +112,9 @@ protected:
 	void AttackEnd();
 	bool CanAttack();
 
+	void PlayEquipMontage(FName SectionName);
+	bool CanDisarm();
+	bool CanArm();
 private:
 
 	ECharacterState CharacterState = ECharacterState::ECS_Unequipped;
@@ -139,6 +144,11 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = Montages)
 	TObjectPtr<UAnimMontage> AttackMontage;
 
+	UPROPERTY(EditDefaultsOnly, Category = Montages)
+	TObjectPtr<UAnimMontage> EquipMontage;
+
+	UPROPERTY(VisibleAnywhere, Category = Weapon)
+	TObjectPtr<AWeapon> EquippedWeapon;
 
 public:
 	//optimize code of a getter or setter in one line

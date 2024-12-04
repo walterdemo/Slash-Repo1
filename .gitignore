@@ -76,3 +76,5 @@ Slash/Plugins/*/Intermediate/*
 # Cache files for the editor to use
 Slash/DerivedDataCache/*
 pointerClase.JPG
+Slash/Assets/Animation/Standing Disarm Over Shoulder.fbx
+Slash/Assets/Animation/Unarmed Equip Over Shoulder.fbx
