@@ -60,6 +60,11 @@ protected:
 
 	EItemState ItemState = EItemState::EIS_Hovering;
 
+
+	//this was moved to protected because now we want to change the colision after weapon is equipped in weapon child
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<USphereComponent> Sphere;
+
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	float RunningTime;
@@ -67,8 +72,7 @@ private:
 
 	
 
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<USphereComponent> Sphere;
+	
 
 };
 

@@ -5,12 +5,38 @@
 
 #include "Characters/SlashCharacter.h"
 
+//sound
+#include "Kismet/GameplayStatics.h"
+
+//modyfing sphere colission component from parent class
+#include "Components/SphereComponent.h"
+
 
 void AWeapon::Equip(TObjectPtr<USceneComponent> InParent, FName InScoketName)
 {
+	AttachMeshToSocket(InParent, InScoketName);
+	ItemState = EItemState::EIS_Equiped;
+	if (EquipSound) //this should be setted on blueprint
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			EquipSound,
+			GetActorLocation()
+		);
+	}
+	if (Sphere)//comes from parent class
+	{
+		Sphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+}
+
+void AWeapon::AttachMeshToSocket(TObjectPtr<USceneComponent> InParent, const FName InScoketName)
+{
+	//this lines were on equip but changed with RMB and refactoring creating anew definition
+	//cause we are gonna use to attach to diferent sockets
 	FAttachmentTransformRules TransformRules(EAttachmentRule::SnapToTarget, true);
 	ItemMesh->AttachToComponent(InParent, TransformRules, InScoketName);
-	ItemState = EItemState::EIS_Equiped;
 }
 
 void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
