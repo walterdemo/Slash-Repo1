@@ -11,6 +11,15 @@
 //modyfing sphere colission component from parent class
 #include "Components/SphereComponent.h"
 
+//modyfing sphere colission component from parent class
+#include "Components/BoxComponent.h"
+
+
+AWeapon::AWeapon()
+{
+	WeaponBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Weapon Box"));
+	WeaponBox->SetupAttachment(GetRootComponent());
+}
 
 void AWeapon::Equip(TObjectPtr<USceneComponent> InParent, FName InScoketName)
 {

@@ -11,12 +11,15 @@
  */
 class USoundBase;
 
+class UBoxComponent;
 
 UCLASS()
 class SLASH_API AWeapon : public AItems
 {
 	GENERATED_BODY()
 public:
+	AWeapon();
+
 	void Equip(TObjectPtr<USceneComponent> InParent, FName InScoketName);
 
 	void AttachMeshToSocket(TObjectPtr<USceneComponent> InParent, const FName InScoketName);
@@ -28,5 +31,8 @@ protected:
 private:
 	UPROPERTY(EditAnywhere, Category ="Weapon Properties")
 	TObjectPtr<USoundBase> EquipSound;
+	
+	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
+	TObjectPtr<UBoxComponent> WeaponBox;
 
 };
