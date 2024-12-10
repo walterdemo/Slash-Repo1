@@ -14,12 +14,26 @@
 //modyfing sphere colission component from parent class
 #include "Components/BoxComponent.h"
 
+//trace by single
+#include "Kismet/KismetSystemLibrary.h"
 
 AWeapon::AWeapon()
 {
 	WeaponBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Weapon Box"));
 	WeaponBox->SetupAttachment(GetRootComponent());
-}
+	WeaponBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	//set all the column to overlap
+	WeaponBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
+	//set just the pawn option into ignore
+	WeaponBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+
+	BoxTraceStart = CreateDefaultSubobject<USceneComponent>(TEXT("Box Trace Start"));
+	BoxTraceStart->SetupAttachment(GetRootComponent());
+
+	BoxTraceEnd = CreateDefaultSubobject<USceneComponent>(TEXT("Box Trace End"));
+	BoxTraceEnd->SetupAttachment(GetRootComponent());
+
+}	
 
 void AWeapon::Equip(TObjectPtr<USceneComponent> InParent, FName InScoketName)
 {
@@ -48,6 +62,13 @@ void AWeapon::AttachMeshToSocket(TObjectPtr<USceneComponent> InParent, const FNa
 	ItemMesh->AttachToComponent(InParent, TransformRules, InScoketName);
 }
 
+void AWeapon::BeginPlay()
+{
+	Super::BeginPlay();
+
+	WeaponBox->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnBoxOverlap);
+}
+
 void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	Super::OnSphereEndOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex);
@@ -74,4 +95,34 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	Super::OnSphereOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep,SweepResult);
+}
+
+void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	//Getting the actual position
+	const FVector Start = BoxTraceStart->GetComponentLocation();
+	const FVector End = BoxTraceEnd->GetComponentLocation();
+
+	//this will be ignore in the trace
+	TArray<AActor*> ActorsToIgnore;//this container can store multiple values of the type we specify in the brackets this time classes...
+	ActorsToIgnore.Add(this);
+
+	FHitResult BoxHit; // it creates a point on the hit location
+
+	UKismetSystemLibrary::BoxTraceSingle(
+		this,
+		Start,
+		End,
+		FVector(5.f, 5.f, 5.f),
+		BoxTraceStart->GetComponentRotation(),
+		ETraceTypeQuery::TraceTypeQuery1,
+		false, //trace by geometry
+		ActorsToIgnore,
+		EDrawDebugTrace::ForDuration,
+		BoxHit,//this is an out paramater , this value will change,
+		true
+	);
+		
+
+
 }
