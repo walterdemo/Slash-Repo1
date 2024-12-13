@@ -2,12 +2,12 @@
 
 #pragma once
 
+
 #include "CoreMinimal.h"
 #include "Items/Items.h"
 #include "Weapon.generated.h"
 
-/**
- *CommentSomething here
+ /*CommentSomething here
  */
 class USoundBase;
 
@@ -50,5 +50,10 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USceneComponent> BoxTraceEnd;
-	
+
+public:
+	//getter for accesing this variable from slashCharacter
+	FORCEINLINE TObjectPtr<UBoxComponent> GetWeaponBox() const { return WeaponBox; }
+
+
 };

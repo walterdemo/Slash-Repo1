@@ -17,11 +17,15 @@
 //trace by single
 #include "Kismet/KismetSystemLibrary.h"
 
+
+//hit interface
+#include "Interfaces/HitInterface.h"
+
 AWeapon::AWeapon()
 {
 	WeaponBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Weapon Box"));
 	WeaponBox->SetupAttachment(GetRootComponent());
-	WeaponBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	WeaponBox->SetCollisionEnabled(ECollisionEnabled::NoCollision); // we will manage collision with notifying only in the moment of attacking
 	//set all the column to overlap
 	WeaponBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
 	//set just the pawn option into ignore
@@ -122,7 +126,21 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 		BoxHit,//this is an out paramater , this value will change,
 		true
 	);
-		
-
-
+	
+	if (BoxHit.GetActor())
+	{	
+		IHitInterface* HitInterface = Cast<IHitInterface>(BoxHit.GetActor());
+		if (HitInterface)
+		{
+			HitInterface->GetHit(BoxHit.ImpactPoint);
+		}
+		/*
+		TObjectPtr<IHitInterface> HitInterface = Cast<IHitInterface>(BoxHit.GetActor());
+		if (HitInterface)
+		{
+			HitInterface->GetHit(BoxHit.ImpactPoint);
+		}
+		*/
+	}
+	
 }
