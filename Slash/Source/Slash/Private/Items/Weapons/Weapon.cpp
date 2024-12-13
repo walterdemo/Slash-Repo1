@@ -111,6 +111,12 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 	TArray<AActor*> ActorsToIgnore;//this container can store multiple values of the type we specify in the brackets this time classes...
 	ActorsToIgnore.Add(this);
 
+	for (AActor* Actor : IgnoreActors) //loops in every component of ignoreActors
+	{
+		ActorsToIgnore.AddUnique(Actor); // AddUnique check is the same item was already part of the array
+	}
+
+
 	FHitResult BoxHit; // it creates a point on the hit location
 
 	UKismetSystemLibrary::BoxTraceSingle(
@@ -134,6 +140,7 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 		{
 			HitInterface->GetHit(BoxHit.ImpactPoint);
 		}
+		IgnoreActors.AddUnique(BoxHit.GetActor()); // Add this actor to ignore  in boxtracesingle up here 
 		/*
 		TObjectPtr<IHitInterface> HitInterface = Cast<IHitInterface>(BoxHit.GetActor());
 		if (HitInterface)

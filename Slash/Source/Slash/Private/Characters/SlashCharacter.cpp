@@ -293,6 +293,6 @@ void ASlashCharacter::SetWeaponCollisionEnabled(ECollisionEnabled::Type Collisio
 	if (EquippedWeapon && EquippedWeapon->GetWeaponBox())
 	{
 		EquippedWeapon->GetWeaponBox()->SetCollisionEnabled(CollisionEnabled);
-
+		EquippedWeapon->IgnoreActors.Empty();//once finished it will clear ignora actor whih was set to ignore mora than 1 one on the same actor, is a variable in weapon
 	}
 }

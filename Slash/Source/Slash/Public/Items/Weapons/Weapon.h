@@ -24,6 +24,9 @@ public:
 
 	void AttachMeshToSocket(TObjectPtr<USceneComponent> InParent, const FName InScoketName);
 
+	//public to use this variable in SlashCharacters when collision ends
+	TArray<AActor*> IgnoreActors;
+
 protected:
 	virtual void BeginPlay() override;
 

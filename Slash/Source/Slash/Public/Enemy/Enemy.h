@@ -33,12 +33,19 @@ protected:
 	* Play montage functions - this is called refactoring for avoid having to much code in one space
 	*/
 	void PlayHitReactMontage(const FName& SectionName);
+
+	void DirectionalHitReact(const FVector& ImpactPoint);
 private:
 	/*
 	*Animation montages
 	*/
 	UPROPERTY(EditDefaultsOnly, Category = Montages)
 	TObjectPtr<UAnimMontage> HitReactMontage;
+
+	UPROPERTY(EditAnywhere, Category = Sounds)
+	TObjectPtr<USoundBase> HitSound;
+
+
 
 public:	
 	
