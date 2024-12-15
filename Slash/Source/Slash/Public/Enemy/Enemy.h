@@ -45,7 +45,8 @@ private:
 	UPROPERTY(EditAnywhere, Category = Sounds)
 	TObjectPtr<USoundBase> HitSound;
 
-
+	UPROPERTY(EditAnywhere, Category = VisualEffects)
+	TObjectPtr<UParticleSystem> HitParticles;
 
 public:	
 	

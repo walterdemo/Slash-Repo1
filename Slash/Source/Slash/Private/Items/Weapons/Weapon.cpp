@@ -128,7 +128,7 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 		ETraceTypeQuery::TraceTypeQuery1,
 		false, //trace by geometry
 		ActorsToIgnore,
-		EDrawDebugTrace::ForDuration,
+		EDrawDebugTrace::None,//it was: ForDuration but we dont want to see it anymore
 		BoxHit,//this is an out paramater , this value will change,
 		true
 	);
