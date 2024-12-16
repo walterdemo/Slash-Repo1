@@ -22,6 +22,14 @@ class SLASH_API IHitInterface
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	virtual void GetHit(const FVector& ImpactPoint) = 0; // a const refernce is more efficient cause we are not looking for changing the value
+	//virtual void GetHit(const FVector& ImpactPoint) = 0; // a const refernce is more efficient cause we are not looking for changing the value
+	
+	//we need GetHit to be access and edited from the blueprint and edited on C++
+	//we dont use the line up there but
+
+	UFUNCTION(BlueprintNativeEvent)
+	void GetHit(const FVector& ImpactPoint);
+
+
 
 };

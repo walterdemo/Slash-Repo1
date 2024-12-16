@@ -24,8 +24,12 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	//
+	//virtual void GetHit(const FVector& ImpactPoint) override;
+	//since GetHit is a Blueprint native event we should use this new which is internally generated
+	virtual void GetHit_Implementation(const FVector& ImpactPoint) override;
 
-	virtual void GetHit(const FVector& ImpactPoint) override;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
