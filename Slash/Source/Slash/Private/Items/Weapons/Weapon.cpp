@@ -21,6 +21,8 @@
 //hit interface
 #include "Interfaces/HitInterface.h"
 
+#include "NiagaraComponent.h"
+
 AWeapon::AWeapon()
 {
 	WeaponBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Weapon Box"));
@@ -54,6 +56,10 @@ void AWeapon::Equip(TObjectPtr<USceneComponent> InParent, FName InScoketName)
 	if (Sphere)//comes from parent class
 	{
 		Sphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+	if (EmbersEffect)
+	{
+		EmbersEffect->Deactivate();
 	}
 
 }

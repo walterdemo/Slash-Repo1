@@ -30,8 +30,23 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-private:	
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	TObjectPtr<UGeometryCollectionComponent> GeometryCollection;
+
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	TObjectPtr<class UCapsuleComponent> Capsule;
+
+
+private:	
+	
+
+	UPROPERTY(EditAnywhere, Category = "Breakable property")
+	TArray<TSubclassOf<class ATreasure>> TreasureClasses;
+	//not anymore
+	//TSubclassOf<class ATreasure> TreasureClass;// this set the variaable to be only related to any ATreasre BP class
+	//TObjectPtr<UClass> TreasureClass;//not anymore
+
+	bool bBroken = false;
 
 };
