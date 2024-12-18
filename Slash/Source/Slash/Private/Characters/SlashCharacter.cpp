@@ -140,7 +140,15 @@ void ASlashCharacter::EKeyPressed()
 	if (OverlappingWeapon)
 	{
 		//the we tell the wepon to get attached
-		OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"));
+		OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
+
+		/*
+		//we are gonna set owner and instigator on equip function
+		//actors can own others actors
+		OverlappingWeapon->SetOwner(this);
+		OverlappingWeapon->SetInstigator(this);//instigator is like ownder but always is a pawn
+		*/
+
 		CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
 		OverlappingItem = nullptr;
 		EquippedWeapon = OverlappingWeapon;

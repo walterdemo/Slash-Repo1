@@ -41,8 +41,12 @@ AWeapon::AWeapon()
 
 }	
 
-void AWeapon::Equip(TObjectPtr<USceneComponent> InParent, FName InScoketName)
+void AWeapon::Equip(TObjectPtr<USceneComponent> InParent, FName InScoketName, AActor* NewOwner, APawn* NewInstigator)
 {
+	//owner and instigator usually are the same
+	SetOwner(NewOwner);
+	SetInstigator(NewInstigator);
+
 	AttachMeshToSocket(InParent, InScoketName);
 	ItemState = EItemState::EIS_Equiped;
 	if (EquipSound) //this should be setted on blueprint
@@ -157,6 +161,14 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 		}
 		*/
 		CreateFields(BoxHit.ImpactPoint);
+
+		UGameplayStatics::ApplyDamage(//this is a function from UGameplayStatics
+			BoxHit.GetActor(),
+			Damage,
+			GetInstigator()->GetController(),
+			this,
+			UDamageType::StaticClass()
+		);
 	}
 	
 }

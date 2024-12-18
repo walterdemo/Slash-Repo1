@@ -20,7 +20,7 @@ class SLASH_API AWeapon : public AItems
 public:
 	AWeapon();
 
-	void Equip(TObjectPtr<USceneComponent> InParent, FName InScoketName);
+	void Equip(TObjectPtr<USceneComponent> InParent, FName InScoketName, AActor* NewOwner, APawn* NewInstigator);
 
 	void AttachMeshToSocket(TObjectPtr<USceneComponent> InParent, const FName InScoketName);
 
@@ -58,6 +58,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USceneComponent> BoxTraceEnd;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	float Damage = 20.f; 
 
 public:
 	//getter for accesing this variable from slashCharacter

@@ -15,6 +15,15 @@
 
 #include "Slash/DebugMacros.h"
 
+//Attribute component
+#include "Components/AttributeComponent.h"
+
+//widgetComponent health bar, it also need to be added on modules
+//#include "Components/WidgetComponent.h"
+
+//instead of UwidgetComponent we use the UHealthBarComponent which is derived from UwidgetComponent but we added some things
+#include "HUD/HealthBarComponent.h"
+
 // Sets default values
 AEnemy::AEnemy()
 {
@@ -27,12 +36,24 @@ AEnemy::AEnemy()
 	GetMesh()->SetGenerateOverlapEvents(true);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	
+	Attributes = CreateDefaultSubobject<UAttributeComponent>(TEXT("Attributes"));
+	/*
+	//we used the widget first then changued to the UHealthBarComponent that we created later
+	HealthBarWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBar"));
+	HealthBarWidget->SetupAttachment(GetRootComponent());
+	*/
+	HealthBarWidget = CreateDefaultSubobject<UHealthBarComponent>(TEXT("HealthBar"));
+	HealthBarWidget->SetupAttachment(GetRootComponent());
+
 }
 
 // Called when the game starts or when spawned
 void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
+
+	
+
 	
 }
 
@@ -142,5 +163,23 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint)
 
 	}
 	
+}
+
+float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	//obs: take damage activates itself when UGameplayStatics::ApplyDamage is called in Weapon.cpp
+
+	if (Attributes)
+	{
+		Attributes->ReceiveDamage(DamageAmount);
+
+		if (HealthBarWidget)
+		{
+			HealthBarWidget->SetHealthPercent(Attributes->GetHealthPercent());
+		}
+
+	}
+
+	return DamageAmount;
 }
 
