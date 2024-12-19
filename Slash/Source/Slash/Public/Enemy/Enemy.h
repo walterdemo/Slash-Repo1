@@ -5,6 +5,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/HitInterface.h" // inheritance from another parent
+//bringing values like the Enum
+#include "Characters/CharacterTypes.h"
+
 #include "Enemy.generated.h"
 
 class UAnimMontage;
@@ -31,17 +34,25 @@ public:
 	//since GetHit is a Blueprint native event we should use this new which is internally generated
 	virtual void GetHit_Implementation(const FVector& ImpactPoint) override;
 
+	void DirectionalHitReact(const FVector& ImpactPoint);
+
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	//die animation montages function
+	void Die();
+
 	/*
 	* Play montage functions - this is called refactoring for avoid having to much code in one space
 	*/
 	void PlayHitReactMontage(const FName& SectionName);
 
-	void DirectionalHitReact(const FVector& ImpactPoint);
+	UPROPERTY(BlueprintReadOnly)
+	EDeathPose DeathPose = EDeathPose::EDP_Alive;
+
 private:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAttributeComponent> Attributes;
@@ -61,6 +72,15 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = VisualEffects)
 	TObjectPtr<UParticleSystem> HitParticles;
+
+	UPROPERTY(EditDefaultsOnly, Category = Montages)
+	TObjectPtr<UAnimMontage> DeathMontage;
+
+	UPROPERTY()
+	TObjectPtr<AActor> CombatTarget;
+	
+	UPROPERTY(EditAnywhere)
+	double CombatRadius = 500.f;
 
 public:	
 	
