@@ -139,9 +139,20 @@ void ASlashCharacter::EKeyPressed()
 	//it will return null pointer if it is not overlapping
 	if (OverlappingWeapon)
 	{
-		//the we tell the wepon to get attached
-		OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
+		//Im gonna ask what weapon type I have
+		EWeaponType WeaponType = OverlappingWeapon->GetWeaponType();
 
+		if (WeaponType == EWeaponType::EWT_OneHanded) {
+			//the we tell the weapon to get attached
+			OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
+			CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
+			isWeapon1 = true;
+		}
+		else if (WeaponType == EWeaponType::EWT_TwoHanded) {
+			OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocketWeaponB"), this, this);
+			CharacterState = ECharacterState::ECS_EquippedTwoHandedWeapon;
+			isWeapon2 = true;
+		}
 		/*
 		//we are gonna set owner and instigator on equip function
 		//actors can own others actors
@@ -149,7 +160,7 @@ void ASlashCharacter::EKeyPressed()
 		OverlappingWeapon->SetInstigator(this);//instigator is like ownder but always is a pawn
 		*/
 
-		CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
+		
 		OverlappingItem = nullptr;
 		EquippedWeapon = OverlappingWeapon;
 	}
@@ -158,13 +169,22 @@ void ASlashCharacter::EKeyPressed()
 		if (CanDisarm())
 		{
 			PlayEquipMontage(FName("Unequip")); // here are the names, same names of the animation montage
+			
 			CharacterState = ECharacterState::ECS_Unequipped;
+
 			ActionState = EActionState::EAS_EquippingWeapon;
+
 		}
 		else if (CanArm())
 		{
 			PlayEquipMontage(FName("Equip"));// here are the names, same names of the animation montage
-			CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
+			if (isWeapon1) {
+				CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
+			}
+			if (isWeapon2) {
+				CharacterState = ECharacterState::ECS_EquippedTwoHandedWeapon;
+			}
+			
 			ActionState = EActionState::EAS_EquippingWeapon;
 		}
 	}
@@ -182,10 +202,21 @@ void ASlashCharacter::Attack()
 void ASlashCharacter::PlayAttackMontage()
 {
 	TObjectPtr<UAnimInstance> AnimInstance = GetMesh()->GetAnimInstance();
+	
+	
+	TObjectPtr<UAnimMontage> AttackMontageVar = AttackMontage;//defining here
+	if (isWeapon1){
+		AttackMontageVar = AttackMontage;
+	}
+	else if (isWeapon2) {
+		AttackMontageVar = AttackMontage2;
+	}
 
-	if (AnimInstance && AttackMontage)
+
+
+	if (AnimInstance && AttackMontageVar)
 	{
-		AnimInstance->Montage_Play(AttackMontage);
+		AnimInstance->Montage_Play(AttackMontageVar);
 		//this is constant because once setted here it will not change again
 		const int32 Selection = FMath::RandRange(0, 1); //Random number from 0 to 1
 		//SectionName is not constant because it is expected to change below
@@ -201,7 +232,7 @@ void ASlashCharacter::PlayAttackMontage()
 		default:
 			break;
 		}
-		AnimInstance->Montage_JumpToSection(SectionName, AttackMontage);
+		AnimInstance->Montage_JumpToSection(SectionName, AttackMontageVar);
 	}
 }
 
@@ -250,7 +281,13 @@ void ASlashCharacter::Disarm()
 	if (EquippedWeapon)
 	{
 		//the we tell the wepon to get attached
-		EquippedWeapon->AttachMeshToSocket(GetMesh(), FName("SpineSocket"));
+		if (isWeapon1) {
+			EquippedWeapon->AttachMeshToSocket(GetMesh(), FName("SpineSocket"));
+		}
+		else {
+			EquippedWeapon->AttachMeshToSocket(GetMesh(), FName("SpineSocket2"));
+		}
+		
 	}
 }
 
@@ -259,7 +296,13 @@ void ASlashCharacter::Arm()
 	if (EquippedWeapon)
 	{
 		//the we tell the wepon to get attached
-		EquippedWeapon->AttachMeshToSocket(GetMesh(), FName("RightHandSocket"));
+		
+		if (isWeapon1) {
+			EquippedWeapon->AttachMeshToSocket(GetMesh(), FName("RightHandSocket"));
+		}
+		else {
+			EquippedWeapon->AttachMeshToSocket(GetMesh(), FName("RightHandSocketWeaponB"));
+		}
 	}
 }
 

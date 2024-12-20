@@ -129,6 +129,11 @@ protected:
 	void FinishEquipping();
 
 
+	//two handed weapon
+	bool isWeapon1 = false;
+	bool isWeapon2 = false;
+
+
 private:
 
 	ECharacterState CharacterState = ECharacterState::ECS_Unequipped;
@@ -163,6 +168,13 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
 	TObjectPtr<AWeapon> EquippedWeapon;
+
+	//Animation Montage fot two handed weapon
+	UPROPERTY(EditDefaultsOnly, Category = Montages)
+	TObjectPtr<UAnimMontage> AttackMontage2;
+
+	UPROPERTY(EditDefaultsOnly, Category = Montages)
+	TObjectPtr<UAnimMontage> EquipMontage2;
 
 public:
 	//optimize code of a getter or setter in one line

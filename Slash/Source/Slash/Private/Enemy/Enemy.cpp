@@ -9,6 +9,9 @@
 //draw error
 #include "Kismet/KismetSystemLibrary.h"
 
+//for editing GetCharacterMovement option (settingmovement)
+#include "GameFramework/CharacterMovementComponent.h"
+
 
 //use sound with hitSound and emitter
 #include "Kismet/GameplayStatics.h"
@@ -44,6 +47,13 @@ AEnemy::AEnemy()
 	*/
 	HealthBarWidget = CreateDefaultSubobject<UHealthBarComponent>(TEXT("HealthBar"));
 	HealthBarWidget->SetupAttachment(GetRootComponent());
+
+	//character rotates while moving
+	GetCharacterMovement()->bOrientRotationToMovement;
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationRoll = false;
+	bUseControllerRotationYaw = false;
+
 
 }
 

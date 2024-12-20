@@ -13,6 +13,14 @@ class USoundBase;
 
 class UBoxComponent;
 
+UENUM()
+enum class EWeaponType : uint8
+{
+	EWT_OneHanded UMETA(DisplayName = "OneHanded"),
+	EWT_TwoHanded UMETA(DisplayName = "TwoHanded")
+};
+
+
 UCLASS()
 class SLASH_API AWeapon : public AItems
 {
@@ -62,9 +70,12 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	float Damage = 20.f; 
 
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	EWeaponType WeaponType = EWeaponType::EWT_OneHanded;
+
 public:
 	//getter for accesing this variable from slashCharacter
 	FORCEINLINE TObjectPtr<UBoxComponent> GetWeaponBox() const { return WeaponBox; }
 
-
+	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 };
