@@ -27,6 +27,10 @@
 //instead of UwidgetComponent we use the UHealthBarComponent which is derived from UwidgetComponent but we added some things
 #include "HUD/HealthBarComponent.h"
 
+//AI patrol of enemy
+#include "AIController.h" //it requires module
+
+
 // Sets default values
 AEnemy::AEnemy()
 {
@@ -66,7 +70,26 @@ void AEnemy::BeginPlay()
 		HealthBarWidget->SetVisibility(false);
 	}
 
-	
+	EnemyController = Cast<AAIController>(GetController());
+
+	if (EnemyController && PatrolTarget)
+	{
+		FAIMoveRequest MoveRequest;
+		MoveRequest.SetGoalActor(PatrolTarget);//goal actor
+		MoveRequest.SetAcceptanceRadius(15.f);//enemy willl stop at 15 u
+		FNavPathSharedPtr NavPath;
+
+		EnemyController->MoveTo(MoveRequest, &NavPath);
+
+		TArray<FNavPathPoint>& PathPoints = NavPath->GetPathPoints();
+		for (auto& Point : PathPoints)
+		{
+			const FVector& Location = Point.Location;
+			DrawDebugSphere(GetWorld(), Location, 12.f, 12, FColor::Green, false, 10.f);
+		}
+
+	}
+
 }
 
 void AEnemy::Die()
@@ -117,6 +140,15 @@ void AEnemy::Die()
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	SetLifeSpan(3.f);
 
+}
+
+bool AEnemy::InTargetRange(AActor* Target, double Radius)
+{
+	const double DistanceToTarget = (Target->GetActorLocation() - GetActorLocation()).Size();//distance from the actor to the enemy
+	DRAW_SPHERE_SingleFrame(GetActorLocation());
+	DRAW_SPHERE_SingleFrame(Target->GetActorLocation());
+	
+	return DistanceToTarget <=  Radius;
 }
 
 void AEnemy::PlayHitReactMontage(const FName& SectionName)
@@ -189,8 +221,11 @@ void AEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	if (CombatTarget) {
-		const double DistanceToTarget = (CombatTarget->GetActorLocation() - GetActorLocation()).Size();//distance from the actor to the enemy
-		if (DistanceToTarget > CombatRadius) {
+		//doing this in InTargetRange function
+		//const double DistanceToTarget = (CombatTarget->GetActorLocation() - GetActorLocation()).Size();//distance from the actor to the enemy
+		//if (DistanceToTarget > CombatRadius) {
+		if(!InTargetRange(CombatTarget, CombatRadius))
+		{
 			CombatTarget = nullptr;
 			if (HealthBarWidget) {
 				HealthBarWidget->SetVisibility(false);
@@ -198,6 +233,38 @@ void AEnemy::Tick(float DeltaTime)
 
 		}
 
+	}
+	if (PatrolTarget && EnemyController)
+	{
+		if (InTargetRange(PatrolTarget, PatrolRadius))
+		{
+			TArray<AActor*> ValidTargets;
+
+			for (AActor* Target : PatrolTargets) 
+			{
+				if (Target != PatrolTarget)
+				{
+					ValidTargets.AddUnique(Target); // to avoid repet actual target
+				}
+
+			}
+
+			const int32 NumPatrolTargets = PatrolTargets.Num();
+			if (NumPatrolTargets > 0)
+			{
+				const int32 TargetSelection = FMath::RandRange(0, NumPatrolTargets - 1);
+				AActor* Target = PatrolTargets[TargetSelection];
+				PatrolTarget = Target;
+
+				FAIMoveRequest MoveRequest;
+				MoveRequest.SetGoalActor(PatrolTarget);//goal actor
+				MoveRequest.SetAcceptanceRadius(15.f);//enemy willl stop at 15 u
+
+				EnemyController->MoveTo(MoveRequest);
+			}
+
+
+		}
 	}
 }
 

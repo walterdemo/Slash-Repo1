@@ -13,6 +13,7 @@
 class UAnimMontage;
 class UAttributeComponent;
 class UHealthBarComponent;
+class AAIController;
 
 UCLASS()
 class SLASH_API AEnemy : public ACharacter, public IHitInterface // inheritance from another parent
@@ -44,6 +45,8 @@ protected:
 
 	//die animation montages function
 	void Die();
+	bool InTargetRange(AActor* Target, double Radius);
+
 
 	/*
 	* Play montage functions - this is called refactoring for avoid having to much code in one space
@@ -81,6 +84,25 @@ private:
 	
 	UPROPERTY(EditAnywhere)
 	double CombatRadius = 500.f;
+
+
+
+	/*
+	*Navigation
+	*/
+	UPROPERTY()
+	TObjectPtr<AAIController> EnemyController;
+	//class AAIControler* EnemyController;
+
+	//Current patrol target
+	UPROPERTY(EditInstanceOnly, Category = "AI Navigation")
+	TObjectPtr<AActor> PatrolTarget;
+
+	UPROPERTY(EditInstanceOnly, Category = "AI Navigation")
+	TArray<AActor*> PatrolTargets;
+
+	UPROPERTY(EditAnywhere)
+	double PatrolRadius = 200.f; // should be a little bit bigger than acceptance radius in BeginPlay function
 
 public:	
 	
