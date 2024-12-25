@@ -108,13 +108,13 @@ void ASlashCharacter::BeginPlay()
 	//if (PlayerController)
 	if(TObjectPtr<APlayerController> PlayerController = Cast<APlayerController>(Controller))
 	{
-		
 		if (TObjectPtr<UEnhancedInputLocalPlayerSubsystem> Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))//to save memory if(UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
 			Subsystem->AddMappingContext(SlashContext, 0);
 		}
-
 	}
+
+	Tags.Add(FName("SlashCharacter"));//Adding tags to  this char
 
 	
 }

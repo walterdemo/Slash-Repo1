@@ -14,6 +14,7 @@ class UAnimMontage;
 class UAttributeComponent;
 class UHealthBarComponent;
 class AAIController;
+class UPawnSensingComponent;
 
 UCLASS()
 class SLASH_API AEnemy : public ACharacter, public IHitInterface // inheritance from another parent
@@ -26,6 +27,10 @@ public:
 	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	void CheckPatrolTarget();
+
+	void CheckCombatTarget();
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -47,6 +52,15 @@ protected:
 	void Die();
 	bool InTargetRange(AActor* Target, double Radius);
 
+	//function of this cause is a repeated action
+	void MoveToTarget(AActor* Target);
+	TObjectPtr<AActor> ChoosePatrolTarget();
+
+	//AIon seen delegate
+	UFUNCTION()
+	void PawnSeen(APawn* SeenPawn);
+
+
 
 	/*
 	* Play montage functions - this is called refactoring for avoid having to much code in one space
@@ -56,13 +70,22 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	EDeathPose DeathPose = EDeathPose::EDP_Alive;
 
+
+
+
+
 private:
+	/*
+	* Components
+	*/
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAttributeComponent> Attributes;
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UHealthBarComponent> HealthBarWidget;//this was UWidget component before, but then we changed to UHealthComponent, it also needed to change on the forward declaration
-	
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UPawnSensingComponent> PawnSensing;
 
 	/*
 	*Animation montages
@@ -85,7 +108,8 @@ private:
 	UPROPERTY(EditAnywhere)
 	double CombatRadius = 500.f;
 
-
+	UPROPERTY(EditAnywhere)
+	double AttackRadius = 150.f;
 
 	/*
 	*Navigation
@@ -103,6 +127,17 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	double PatrolRadius = 200.f; // should be a little bit bigger than acceptance radius in BeginPlay function
+
+	FTimerHandle PatrolTimer;//like a timer with an alarma and function attach
+	void PatrolTimerFinished();//when the alarm hit, this funciton is called
+
+	UPROPERTY(EditAnywhere, Category = "AI Navigation")
+	float WaitMin = 5.f;
+
+	UPROPERTY(EditAnywhere, Category = "AI Navigation")
+	float WaitMax = 10.f;
+
+	EEnemyState EnemyState = EEnemyState::EES_Patrolling;
 
 public:	
 	
