@@ -3,21 +3,21 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
-#include "Interfaces/HitInterface.h" // inheritance from another parent
+//#include "GameFramework/Character.h" //changed for the line down here
+#include "Characters/BaseCharacter.h"
+//#include "Interfaces/HitInterface.h" // inheritance from another parent
 //bringing values like the Enum
 #include "Characters/CharacterTypes.h"
 
 #include "Enemy.generated.h"
 
-class UAnimMontage;
-class UAttributeComponent;
+
 class UHealthBarComponent;
 class AAIController;
 class UPawnSensingComponent;
 
 UCLASS()
-class SLASH_API AEnemy : public ACharacter, public IHitInterface // inheritance from another parent
+class SLASH_API AEnemy : public ABaseCharacter // inheritance from another parent
 {
 	GENERATED_BODY()
 
@@ -32,54 +32,50 @@ public:
 
 	void CheckCombatTarget();
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	//
 	//virtual void GetHit(const FVector& ImpactPoint) override;
 	//since GetHit is a Blueprint native event we should use this new which is internally generated
 	virtual void GetHit_Implementation(const FVector& ImpactPoint) override;
 
-	void DirectionalHitReact(const FVector& ImpactPoint);
+	
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
+	virtual void Destroyed() override;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	//die animation montages function
-	void Die();
+	virtual void Die() override;
 	bool InTargetRange(AActor* Target, double Radius);
 
 	//function of this cause is a repeated action
 	void MoveToTarget(AActor* Target);
 	TObjectPtr<AActor> ChoosePatrolTarget();
 
+	virtual void Attack() override;
+	virtual void PlayAttackMontage() override;
+	virtual bool CanAttack() override;
+	virtual void HandleDamage(float DamageAmount) override;
+
 	//AIon seen delegate
 	UFUNCTION()
 	void PawnSeen(APawn* SeenPawn);
 
-
-
-	/*
-	* Play montage functions - this is called refactoring for avoid having to much code in one space
-	*/
-	void PlayHitReactMontage(const FName& SectionName);
+	
 
 	UPROPERTY(BlueprintReadOnly)
-	EDeathPose DeathPose = EDeathPose::EDP_Alive;
+	EDeathPose DeathPose;
 
-
+	UPROPERTY(BlueprintReadOnly)
+	EEnemyState EnemyState = EEnemyState::EES_Patrolling;
 
 
 
 private:
-	/*
-	* Components
-	*/
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UAttributeComponent> Attributes;
+	
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UHealthBarComponent> HealthBarWidget;//this was UWidget component before, but then we changed to UHealthComponent, it also needed to change on the forward declaration
@@ -87,20 +83,11 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UPawnSensingComponent> PawnSensing;
 
-	/*
-	*Animation montages
-	*/
-	UPROPERTY(EditDefaultsOnly, Category = Montages)
-	TObjectPtr<UAnimMontage> HitReactMontage;
+	
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class AWeapon> WeaponClass;
 
-	UPROPERTY(EditAnywhere, Category = Sounds)
-	TObjectPtr<USoundBase> HitSound;
-
-	UPROPERTY(EditAnywhere, Category = VisualEffects)
-	TObjectPtr<UParticleSystem> HitParticles;
-
-	UPROPERTY(EditDefaultsOnly, Category = Montages)
-	TObjectPtr<UAnimMontage> DeathMontage;
+	
 
 	UPROPERTY()
 	TObjectPtr<AActor> CombatTarget;
@@ -109,7 +96,7 @@ private:
 	double CombatRadius = 500.f;
 
 	UPROPERTY(EditAnywhere)
-	double AttackRadius = 150.f;
+	double AttackRadius = 130.f;
 
 	/*
 	*Navigation
@@ -137,8 +124,43 @@ private:
 	UPROPERTY(EditAnywhere, Category = "AI Navigation")
 	float WaitMax = 10.f;
 
-	EEnemyState EnemyState = EEnemyState::EES_Patrolling;
 
+	/*
+	AI behavior
+	*/
+	void HideHealthBar();
+	void ShowHealthBar();
+	void LoseInterest();
+	void StartPatrolling();
+	void ChaseTarget();
+	bool IsOutsideCombatRadius();
+	bool IsOutsideAttackRadius();
+	bool IsInsideAttackRadius();
+	bool IsChasing();
+	bool IsAttacking();
+	bool IsDead();
+	bool IsEngaged();
+	void ClearPatrolTimer();
+
+	/*
+	Combat
+	*/
+	void StartAttackTimer();
+	void ClearAttackTimer();
+
+	FTimerHandle AttackTimer;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float AttackMin = 0.5f;
+	
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float AttackMax = 1.f;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float PatrollingSpeed = 125.f;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float ChasingSpeed = 300.f;
 public:	
 	
 

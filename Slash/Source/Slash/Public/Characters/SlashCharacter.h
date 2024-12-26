@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
-
+//#include "GameFramework/Character.h" // changing to BaseCharacter 
+#include "BaseCharacter.h"
 #include "InputActionValue.h" //TODO : remember how and why I  did use this variable
 //I think is because is a two dimensional Value and it has a different format
 //
@@ -32,7 +32,7 @@ class UGroomComponent;
 class AItems;
 class UAnimMontage;
 
-class AWeapon;
+
 /*
 //We will declare it on CharacterTypesHeader.h
 UENUM(BlueprintType) //a type that can be used in blueprint
@@ -45,7 +45,7 @@ enum class ECharacterState : uint8 //u because it's unsigned no negative values
 };*/
 
 UCLASS()
-class SLASH_API ASlashCharacter : public ACharacter
+class SLASH_API ASlashCharacter : public ABaseCharacter // changed from ACharacter
 {
 	GENERATED_BODY()
 
@@ -58,9 +58,7 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	UFUNCTION(BlueprintCallable)
-	void SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled);
-
+	
 protected:
 	//void MoveForward(floatValue);
 
@@ -100,7 +98,7 @@ protected:
 	void Look(const FInputActionValue& Value);
 	virtual void Jump() override;
 	void EKeyPressed();
-	void Attack();
+	virtual void Attack() override;
 	/*
 	void Dodge();
 	virtual void Attack() override;
@@ -110,10 +108,10 @@ protected:
 	/*
 	* Play montage functions - this is called refactoring for avoid having to much code in one space
 	*/
-	void PlayAttackMontage();
-	UFUNCTION(BlueprintCallable)
-	void AttackEnd();
-	bool CanAttack();
+	virtual void PlayAttackMontage() override;
+	//UFUNCTION(BlueprintCallable)// UFUNCTION only needed on BaseCharacter
+	virtual void AttackEnd() override; 
+	virtual bool CanAttack() override;
 
 	void PlayEquipMontage(const FName& SectionName);
 	bool CanDisarm();
@@ -157,17 +155,12 @@ private:
 	UPROPERTY(VisibleInstanceOnly)
 	TObjectPtr<AItems> OverlappingItem;
 
-	/*
-	*Animation montages
-	*/
-	UPROPERTY(EditDefaultsOnly, Category = Montages)
-	TObjectPtr<UAnimMontage> AttackMontage;
+	
 
 	UPROPERTY(EditDefaultsOnly, Category = Montages)
 	TObjectPtr<UAnimMontage> EquipMontage;
 
-	UPROPERTY(VisibleAnywhere, Category = Weapon)
-	TObjectPtr<AWeapon> EquippedWeapon;
+	
 
 	//Animation Montage fot two handed weapon
 	UPROPERTY(EditDefaultsOnly, Category = Montages)

@@ -19,7 +19,7 @@
 
 
 //use sound with hitSound and emitter
-#include "Kismet/GameplayStatics.h"
+//#include "Kismet/GameplayStatics.h"
 
 #include "Slash/DebugMacros.h"
 
@@ -29,6 +29,9 @@
 
 //instead of UwidgetComponent we use the UHealthBarComponent which is derived from UwidgetComponent but we added some things
 #include "HUD/HealthBarComponent.h"
+
+//weapon
+#include "Items/Weapons/Weapon.h"
 
 //AI patrol of enemy
 #include "AIController.h" //it requires module
@@ -46,7 +49,7 @@ AEnemy::AEnemy()
 	GetMesh()->SetGenerateOverlapEvents(true);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	
-	Attributes = CreateDefaultSubobject<UAttributeComponent>(TEXT("Attributes"));
+	
 	/*
 	//we used the widget first then changued to the UHealthBarComponent that we created later
 	HealthBarWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBar"));
@@ -67,8 +70,6 @@ AEnemy::AEnemy()
 
 
 
-
-
 }
 
 // Called when the game starts or when spawned
@@ -76,9 +77,7 @@ void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (HealthBarWidget) {
-		HealthBarWidget->SetVisibility(false);
-	}
+	HideHealthBar();
 
 	EnemyController = Cast<AAIController>(GetController());
 
@@ -91,6 +90,14 @@ void AEnemy::BeginPlay()
 		PawnSensing->OnSeePawn.AddDynamic(this, &AEnemy::PawnSeen);
 	}
 
+	//attaching the sword
+	TObjectPtr<UWorld> World = GetWorld();
+	if (World && WeaponClass)
+	{
+		TObjectPtr<AWeapon> DefaultWeapon = World->SpawnActor<AWeapon>(WeaponClass);
+		DefaultWeapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
+		EquippedWeapon = DefaultWeapon;
+	}
 
 }
 
@@ -156,11 +163,13 @@ bool AEnemy::InTargetRange(AActor* Target, double Radius)
 
 void AEnemy::MoveToTarget(AActor* Target)
 {
+	
 	if (EnemyController == nullptr || Target == nullptr) return;
-
+	
+	
 	FAIMoveRequest MoveRequest;
 	MoveRequest.SetGoalActor(Target);//goal actor
-	MoveRequest.SetAcceptanceRadius(15.f);//enemy willl stop at 15 u
+	MoveRequest.SetAcceptanceRadius(50.f);//enemy willl stop at 15 u
 	//FNavPathSharedPtr NavPath;//use for draw navigation path
 
 	EnemyController->MoveTo(MoveRequest);// , & NavPath);//NavPath is optional parameter
@@ -197,94 +206,181 @@ TObjectPtr<AActor> AEnemy::ChoosePatrolTarget()
 	return nullptr;
 }
 
+void AEnemy::Attack()
+{
+	Super::Attack();
+	PlayAttackMontage();
+}
+
+void AEnemy::PlayAttackMontage() 
+{
+	Super::PlayAttackMontage();
+	TObjectPtr<UAnimInstance> AnimInstance = GetMesh()->GetAnimInstance();
+
+	if (AnimInstance && AttackMontage)
+	{
+		AnimInstance->Montage_Play(AttackMontage);
+		//this is constant because once setted here it will not change again
+		const int32 Selection = FMath::RandRange(0, 2); //Random number from 0 to 2
+		//SectionName is not constant because it is expected to change below
+		FName SectionName = FName();
+		switch (Selection)
+		{
+		case 0:
+			SectionName = FName("Attack1");
+			break;
+		case 1:
+			SectionName = FName("Attack2");
+			break;
+		case 2:
+			SectionName = FName("Attack3");
+			break;
+		default:
+			break;
+		}
+		AnimInstance->Montage_JumpToSection(SectionName, AttackMontage);
+	}
+
+
+}
+
+bool AEnemy::CanAttack()
+{
+	bool bCanAttack =
+		IsInsideAttackRadius() &&
+		!IsAttacking() &&
+		!IsDead();
+	return bCanAttack;
+}
+
+void AEnemy::HandleDamage(float DamageAmount)
+{	
+	Super::HandleDamage(DamageAmount);
+	if (Attributes && HealthBarWidget)
+	{
+		HealthBarWidget->SetHealthPercent(Attributes->GetHealthPercent());
+	}
+}
+
+
+
 void AEnemy::PawnSeen(APawn* SeenPawn)//it wil cal l frecuently (tick)
 {
-	if (EnemyState == EEnemyState::EES_Chasing) return;
-	if (SeenPawn->ActorHasTag(FName("SlashCharacter")))
+	const bool bShouldChaseTarget =
+
+		EnemyState != EEnemyState::EES_Dead &&
+		EnemyState != EEnemyState::EES_Chasing &&
+		EnemyState < EEnemyState::EES_Attacking &&
+		SeenPawn->ActorHasTag(FName("SlashCharacter"));
+
+	if (bShouldChaseTarget)
 	{
-		GetWorldTimerManager().ClearTimer(PatrolTimer);//when timer counts and if its chasing it will change to patrolling again, so ww are deactivating timer, clear?
-		GetCharacterMovement()->MaxWalkSpeed = 300.f;//enemy gows faster
 		CombatTarget = SeenPawn;//actual target
-
-		if (EnemyState != EEnemyState::EES_Attacking)
-		{
-			EnemyState = EEnemyState::EES_Chasing;
-			MoveToTarget(CombatTarget);//will move to target
-			//UE_LOG(LogTemp, Warning, TEXT("Seen Pawn, now Chasing"));
-		}
-		
+		ClearPatrolTimer();
+		ChaseTarget();
 	}
+
+	
 }
 
-void AEnemy::PlayHitReactMontage(const FName& SectionName)
-{
-	TObjectPtr<UAnimInstance> AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance && HitReactMontage) // HitReactMontage variable that comes from blueprint Animation Montage
-	{
-		AnimInstance->Montage_Play(HitReactMontage);
-		AnimInstance->Montage_JumpToSection(SectionName, HitReactMontage);
-	}
-}
+
 
 void AEnemy::PatrolTimerFinished()
 {
 	MoveToTarget(PatrolTarget);
 }
 
-void AEnemy::DirectionalHitReact(const FVector& ImpactPoint)
+void AEnemy::HideHealthBar()
 {
-	const FVector Forward = GetActorForwardVector();
-	//Lower Impact Point to the Enemy's hit
-
-	const FVector ImpactLowered(ImpactPoint.X, ImpactPoint.Y, GetActorLocation().Z);
-
-	const FVector ToHit = (ImpactLowered - GetActorLocation()).GetSafeNormal();
-
-	//Forward * ToHit = |Forward||ToHit| * cos(theta)
-	//|Forward| = 1, |ToHit| = 1, so Forward * ToHit = cos(theta)
-	const double CosTheta = FVector::DotProduct(Forward, ToHit);
-	//Take the inverse cosine (arc-cosine) of cos(theta) to get theta
-	double Theta = FMath::Acos(CosTheta);//angle in radians
-	//radians to degrees
-	Theta = FMath::RadiansToDegrees(Theta);
-
-	//if CrossProduct points down, Theta should be negative, hand right math rule, but in UE in left hand
-	const FVector CrossProduct = FVector::CrossProduct(Forward, ToHit);
-	if (CrossProduct.Z < 0)
-	{
-		Theta *= -1.f;
+	if (HealthBarWidget) {
+		HealthBarWidget->SetVisibility(false);
 	}
-	
-
-
-	FName Section("FromBack");
-
-	if (Theta >= -45.f && Theta < 45.f)
-	{
-		Section = FName("FromFront");
-	}
-	else if (Theta >= -135.f && Theta < -45.f)
-	{
-		Section = FName("FromLeft");
-	}
-	else if (Theta >= 45.f && Theta < 135.f)
-	{
-		Section = FName("FromRight");
-	}
-
-	PlayHitReactMontage(Section);
-	/*
-	UKismetSystemLibrary::DrawDebugArrow(this, GetActorLocation(), GetActorLocation() + CrossProduct * 100.f, 5.f, FColor::Red, 5.f);
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Green, FString::Printf(TEXT("Theta: %f"), Theta));
-
-	}
-
-	UKismetSystemLibrary::DrawDebugArrow(this, GetActorLocation(), GetActorLocation() + Forward * 60.f, 5.f, FColor::Red, 5.f);
-	UKismetSystemLibrary::DrawDebugArrow(this, GetActorLocation(), GetActorLocation() + ToHit * 60.f, 5.f, FColor::Green, 5.f);
-	*/
 }
+
+void AEnemy::ShowHealthBar()
+{
+	if (HealthBarWidget) {
+		HealthBarWidget->SetVisibility(true);
+	}
+}
+
+void AEnemy::LoseInterest()
+{
+	//Outside combat radius , lose interest
+	CombatTarget = nullptr;
+	HideHealthBar();//refactored
+}
+
+void AEnemy::StartPatrolling()
+{
+	EnemyState = EEnemyState::EES_Patrolling;
+	GetCharacterMovement()->MaxWalkSpeed = PatrollingSpeed;
+	MoveToTarget(PatrolTarget);
+}
+
+void AEnemy::ChaseTarget()
+{
+	//Outside attack range, chase character
+	EnemyState = EEnemyState::EES_Chasing;
+	GetCharacterMovement()->MaxWalkSpeed = ChasingSpeed;
+	MoveToTarget(CombatTarget);
+	//UE_LOG(LogTemp, Warning, TEXT("Chase Player"));
+}
+
+bool AEnemy::IsOutsideCombatRadius()
+{
+	return !InTargetRange(CombatTarget, CombatRadius);
+}
+
+bool AEnemy::IsOutsideAttackRadius()
+{
+	return !InTargetRange(CombatTarget, AttackRadius);
+}
+
+bool AEnemy::IsInsideAttackRadius()
+{
+	return InTargetRange(CombatTarget, AttackRadius);
+}
+
+bool AEnemy::IsChasing()
+{
+	return EnemyState == EEnemyState::EES_Chasing;
+}
+
+bool AEnemy::IsAttacking()
+{
+	return EnemyState == EEnemyState::EES_Attacking;
+}
+
+bool AEnemy::IsDead()
+{
+	return EnemyState == EEnemyState::EES_Dead;
+}
+
+bool AEnemy::IsEngaged()
+{
+	return EnemyState == EEnemyState::EES_Engaged;
+}
+
+void AEnemy::ClearPatrolTimer()
+{
+	GetWorldTimerManager().ClearTimer(PatrolTimer);//when timer counts and if its chasing it will change to patrolling again, so ww are deactivating timer, clear?
+}
+
+void AEnemy::StartAttackTimer()
+{
+	EnemyState = EEnemyState::EES_Attacking;
+	const float AttackTime = FMath::RandRange(AttackMin, AttackMax);
+	GetWorldTimerManager().SetTimer(AttackTimer, this, &AEnemy::Attack, AttackTime);
+
+}
+
+void AEnemy::ClearAttackTimer()
+{
+	GetWorldTimerManager().ClearTimer(AttackTimer);
+}
+
+
 
 // Called every frame
 void AEnemy::Tick(float DeltaTime)
@@ -305,8 +401,8 @@ void AEnemy::Tick(float DeltaTime)
 		}
 
 	}*/
-
-
+	
+	if (IsDead()) return;
 
 	if (EnemyState > EEnemyState::EES_Patrolling) //Patrolling is state 0 so any other state will be more than 0
 	{
@@ -356,6 +452,9 @@ void AEnemy::Tick(float DeltaTime)
 
 void AEnemy::CheckPatrolTarget()
 {
+	
+	
+	
 	if (InTargetRange(PatrolTarget, PatrolRadius))
 	{
 		PatrolTarget = ChoosePatrolTarget();
@@ -374,78 +473,42 @@ void AEnemy::CheckPatrolTarget()
 
 void AEnemy::CheckCombatTarget()
 {
-	if (!InTargetRange(CombatTarget, CombatRadius))
+	if (IsOutsideCombatRadius())
 	{
-		//Outside combat radius , lose interest
-		CombatTarget = nullptr;
-		if (HealthBarWidget) {
-			HealthBarWidget->SetVisibility(false);
-		}
-		EnemyState = EEnemyState::EES_Patrolling;
-		GetCharacterMovement()->MaxWalkSpeed = 125.f;
-		MoveToTarget(PatrolTarget);
-		//UE_LOG(LogTemp, Warning, TEXT("Lose Interest"));
+		UE_LOG(LogTemp, Warning, TEXT("Outside Combat radiuds"));
+		ClearAttackTimer();
+		LoseInterest();
+		if (!IsEngaged()) StartPatrolling();
+		
 	}
-	else if (!InTargetRange(CombatTarget, AttackRadius) && EnemyState != EEnemyState::EES_Chasing)
+	else if (IsOutsideAttackRadius() && !IsChasing())
 	{
-		//Outside attack range, chase character
-		EnemyState = EEnemyState::EES_Chasing;
-		GetCharacterMovement()->MaxWalkSpeed = 300.f;
-		MoveToTarget(CombatTarget);
-		//UE_LOG(LogTemp, Warning, TEXT("Chase Player"));
+		UE_LOG(LogTemp, Warning, TEXT("Hello World"));
+		ClearAttackTimer();
+		if (!IsEngaged()) ChaseTarget();
 	}
-	else if (InTargetRange(CombatTarget, AttackRadius) && EnemyState != EEnemyState::EES_Attacking)
+	else if (CanAttack())
 	{
-		//Inside attack range, attack character
-		EnemyState = EEnemyState::EES_Attacking;
-		//TODO: Attack montage
-		//UE_LOG(LogTemp, Warning, TEXT("Chase Player"));
+		UE_LOG(LogTemp, Warning, TEXT("Hello World"));
+		StartAttackTimer();
 	}
 
 
 }
 
-// Called to bind functionality to input
-void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-}
 
 void AEnemy::GetHit_Implementation(const FVector& ImpactPoint)
 {
-	if (HealthBarWidget) {
-		HealthBarWidget->SetVisibility(true);//make bar visible when is hit
-	}
+	ShowHealthBar();
 	//DRAW_SPHERE_COLOR(ImpactPoint, FColor::Orange);
-	if (Attributes && Attributes->isAlive()){
+	if (IsAlive()){
 		DirectionalHitReact(ImpactPoint);
 	}
-	else {
-		Die();
-	}
+	else Die();
 	
-	
-	if (HitSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(
-			this,
-			HitSound,
-			ImpactPoint
-		);
+	PlayHitSound(ImpactPoint);
 
-	}
-
-	if (HitParticles && GetWorld())//if the object was created wetWorld is obvios True but is good practice this time for remember a good codding example
-	{
-		UGameplayStatics::SpawnEmitterAtLocation(
-			GetWorld(),
-			HitParticles,
-			ImpactPoint
-
-		);
-
-	}
+	SpawnHitParticles(ImpactPoint);
 	
 }
 
@@ -453,22 +516,19 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 {
 	//obs: take damage activates itself when UGameplayStatics::ApplyDamage is called in Weapon.cpp
 
-	if (Attributes)
-	{
-		Attributes->ReceiveDamage(DamageAmount);
-
-		if (HealthBarWidget)
-		{
-			HealthBarWidget->SetHealthPercent(Attributes->GetHealthPercent());
-		}
-
-	}
+	HandleDamage(DamageAmount);
 
 	CombatTarget = EventInstigator->GetPawn();//saving who damage the actor
-	EnemyState = EEnemyState::EES_Chasing;
-	GetCharacterMovement()->MaxWalkSpeed = 300.f;
-	MoveToTarget(CombatTarget);
+	ChaseTarget();
 	
 	return DamageAmount;
+}
+
+void AEnemy::Destroyed()
+{
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->Destroy();
+	}
 }
 
