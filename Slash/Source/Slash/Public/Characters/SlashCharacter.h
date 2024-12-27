@@ -108,7 +108,7 @@ protected:
 	/*
 	* Play montage functions - this is called refactoring for avoid having to much code in one space
 	*/
-	virtual void PlayAttackMontage() override;
+
 	//UFUNCTION(BlueprintCallable)// UFUNCTION only needed on BaseCharacter
 	virtual void AttackEnd() override; 
 	virtual bool CanAttack() override;

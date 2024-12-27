@@ -200,43 +200,6 @@ void ASlashCharacter::Attack()
 	}
 }
 
-void ASlashCharacter::PlayAttackMontage()
-{
-	Super::PlayAttackMontage();
-	TObjectPtr<UAnimInstance> AnimInstance = GetMesh()->GetAnimInstance();
-	
-	
-	TObjectPtr<UAnimMontage> AttackMontageVar = AttackMontage;//defining here
-	if (isWeapon1){
-		AttackMontageVar = AttackMontage;
-	}
-	else if (isWeapon2) {
-		AttackMontageVar = AttackMontage2;
-	}
-
-
-
-	if (AnimInstance && AttackMontageVar)
-	{
-		AnimInstance->Montage_Play(AttackMontageVar);
-		//this is constant because once setted here it will not change again
-		const int32 Selection = FMath::RandRange(0, 1); //Random number from 0 to 1
-		//SectionName is not constant because it is expected to change below
-		FName SectionName = FName();
-		switch (Selection)
-		{
-		case 0:
-			SectionName = FName("Attack1");
-			break;
-		case 1:
-			SectionName = FName("Attack2");
-			break;
-		default:
-			break;
-		}
-		AnimInstance->Montage_JumpToSection(SectionName, AttackMontageVar);
-	}
-}
 
 void ASlashCharacter::PlayEquipMontage(const FName& SectionName)
 {

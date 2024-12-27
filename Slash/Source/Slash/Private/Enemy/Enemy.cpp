@@ -103,6 +103,7 @@ void AEnemy::BeginPlay()
 
 void AEnemy::Die()
 {
+	/*
 	//play die montage
 	TObjectPtr<UAnimInstance> AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && DeathMontage) // HitReactMontage variable that comes from blueprint Animation Montage
@@ -145,10 +146,14 @@ void AEnemy::Die()
 
 		AnimInstance->Montage_JumpToSection(SectionName, DeathMontage);
 	}
-
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	SetLifeSpan(3.f);
-
+	*/
+	EnemyState = EEnemyState::EES_Dead;
+	PlayDeathMontage();
+	ClearAttackTimer();
+	HideHealthBar();
+	DisableCapsule();
+	SetLifeSpan(DeathLifeSpan);
+	GetCharacterMovement()->bOrientRotationToMovement = false; // avoid moving when is dead
 }
 
 bool AEnemy::InTargetRange(AActor* Target, double Radius)
@@ -212,38 +217,6 @@ void AEnemy::Attack()
 	PlayAttackMontage();
 }
 
-void AEnemy::PlayAttackMontage() 
-{
-	Super::PlayAttackMontage();
-	TObjectPtr<UAnimInstance> AnimInstance = GetMesh()->GetAnimInstance();
-
-	if (AnimInstance && AttackMontage)
-	{
-		AnimInstance->Montage_Play(AttackMontage);
-		//this is constant because once setted here it will not change again
-		const int32 Selection = FMath::RandRange(0, 2); //Random number from 0 to 2
-		//SectionName is not constant because it is expected to change below
-		FName SectionName = FName();
-		switch (Selection)
-		{
-		case 0:
-			SectionName = FName("Attack1");
-			break;
-		case 1:
-			SectionName = FName("Attack2");
-			break;
-		case 2:
-			SectionName = FName("Attack3");
-			break;
-		default:
-			break;
-		}
-		AnimInstance->Montage_JumpToSection(SectionName, AttackMontage);
-	}
-
-
-}
-
 bool AEnemy::CanAttack()
 {
 	bool bCanAttack =
@@ -260,6 +233,18 @@ void AEnemy::HandleDamage(float DamageAmount)
 	{
 		HealthBarWidget->SetHealthPercent(Attributes->GetHealthPercent());
 	}
+}
+
+int32 AEnemy::PlayDeathMontage()
+{
+	const int32 Selection = Super::PlayDeathMontage();
+	
+	TEnumAsByte<EDeathPose> Pose(Selection);
+	if (Pose < EDeathPose::EDP_MAX)
+	{
+		DeathPose = Pose;
+	}
+	return Selection;
 }
 
 
@@ -475,7 +460,7 @@ void AEnemy::CheckCombatTarget()
 {
 	if (IsOutsideCombatRadius())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Outside Combat radiuds"));
+		//UE_LOG(LogTemp, Warning, TEXT("Outside Combat radiuds"));
 		ClearAttackTimer();
 		LoseInterest();
 		if (!IsEngaged()) StartPatrolling();
@@ -483,13 +468,13 @@ void AEnemy::CheckCombatTarget()
 	}
 	else if (IsOutsideAttackRadius() && !IsChasing())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Hello World"));
+		//UE_LOG(LogTemp, Warning, TEXT("chasing"));
 		ClearAttackTimer();
 		if (!IsEngaged()) ChaseTarget();
 	}
 	else if (CanAttack())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Hello World"));
+		UE_LOG(LogTemp, Warning, TEXT("Attackinh"));
 		StartAttackTimer();
 	}
 

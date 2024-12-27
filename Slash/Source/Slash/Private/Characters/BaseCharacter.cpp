@@ -4,7 +4,7 @@
 #include "Characters/BaseCharacter.h"
 //Accesing WeaponBox from Overlapping item
 #include "Components/BoxComponent.h"
-
+#include "Components/CapsuleComponent.h"
 //weapon and item 
 //#include "Items/Items.h"
 #include "Items/Weapons/Weapon.h"
@@ -25,14 +25,7 @@ ABaseCharacter::ABaseCharacter()
 
 }
 
-void ABaseCharacter::SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled)
-{
-	if (EquippedWeapon && EquippedWeapon->GetWeaponBox())
-	{
-		EquippedWeapon->GetWeaponBox()->SetCollisionEnabled(CollisionEnabled);
-		EquippedWeapon->IgnoreActors.Empty();//once finished it will clear ignora actor whih was set to ignore mora than 1 one on the same actor, is a variable in weapon
-	}
-}
+
 
 // Called when the game starts or when spawned
 void ABaseCharacter::BeginPlay()
@@ -84,6 +77,29 @@ void ABaseCharacter::HandleDamage(float DamageAmount)
 	{
 		Attributes->ReceiveDamage(DamageAmount);
 	}
+}
+
+void ABaseCharacter::PlayMontageSection(UAnimMontage* Montage, const FName& SectionName)
+{
+	TObjectPtr<UAnimInstance> AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && Montage)
+	{
+		AnimInstance->Montage_Play(Montage);
+
+		AnimInstance->Montage_JumpToSection(SectionName, Montage);
+	}
+
+}
+
+int32 ABaseCharacter::PlayRandomMontageSections(UAnimMontage* Montage, const TArray<FName>& SectionNames)
+{
+	if (SectionNames.Num() <= 0) return -1;
+	const int32 MaxSectionIndex = SectionNames.Num() - 1;
+	const int32 Selection = FMath::RandRange(0, MaxSectionIndex);
+	PlayMontageSection(Montage, SectionNames[Selection]);
+
+	return Selection
+		;
 }
 
 void ABaseCharacter::AttackEnd()
@@ -155,8 +171,21 @@ void ABaseCharacter::DirectionalHitReact(const FVector& ImpactPoint)
 	*/
 }
 
-void ABaseCharacter::PlayAttackMontage()
+int32 ABaseCharacter::PlayAttackMontage()
+{	
+	//Super::PlayAttackMontage();
+	return PlayRandomMontageSections(AttackMontage, AttackMontageSections);
+
+}
+
+int32 ABaseCharacter::PlayDeathMontage()
 {
+	return PlayRandomMontageSections(DeathMontage, DeathMontageSections);
+}
+
+void ABaseCharacter::DisableCapsule()
+{
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 // Called every frame
@@ -176,3 +205,11 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 }
 */
+void ABaseCharacter::SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled)
+{
+	if (EquippedWeapon && EquippedWeapon->GetWeaponBox())
+	{
+		EquippedWeapon->GetWeaponBox()->SetCollisionEnabled(CollisionEnabled);
+		EquippedWeapon->IgnoreActors.Empty();//once finished it will clear ignora actor whih was set to ignore mora than 1 one on the same actor, is a variable in weapon
+	}
+}
