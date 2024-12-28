@@ -21,6 +21,10 @@ class SLASH_API AEnemy : public ABaseCharacter // inheritance from another paren
 {
 	GENERATED_BODY()
 
+
+
+
+
 public:
 	// Sets default values for this character's properties
 	AEnemy();
@@ -59,6 +63,7 @@ protected:
 	virtual bool CanAttack() override;
 	virtual void HandleDamage(float DamageAmount) override;
 	virtual int32 PlayDeathMontage() override;
+	virtual void AttackEnd() override;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	float DeathLifeSpan = 5.f;
@@ -98,7 +103,7 @@ private:
 	TObjectPtr<AActor> CombatTarget;
 	
 	UPROPERTY(EditAnywhere)
-	double CombatRadius = 500.f;
+	double CombatRadius = 1000.f;
 
 	UPROPERTY(EditAnywhere)
 	double AttackRadius = 130.f;
@@ -124,10 +129,10 @@ private:
 	void PatrolTimerFinished();//when the alarm hit, this funciton is called
 
 	UPROPERTY(EditAnywhere, Category = "AI Navigation")
-	float WaitMin = 5.f;
+	float PatrolWaitMin = 5.f;
 
 	UPROPERTY(EditAnywhere, Category = "AI Navigation")
-	float WaitMax = 10.f;
+	float PatrolWaitMax = 10.f;
 
 
 	/*

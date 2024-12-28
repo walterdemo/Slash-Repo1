@@ -212,7 +212,8 @@ TObjectPtr<AActor> AEnemy::ChoosePatrolTarget()
 }
 
 void AEnemy::Attack()
-{
+{	
+	EnemyState = EEnemyState::EES_Engaged;
 	Super::Attack();
 	PlayAttackMontage();
 }
@@ -222,7 +223,8 @@ bool AEnemy::CanAttack()
 	bool bCanAttack =
 		IsInsideAttackRadius() &&
 		!IsAttacking() &&
-		!IsDead();
+		!IsEngaged() &&
+		!IsDead();//in other wors here we could have used if characters is patrolling
 	return bCanAttack;
 }
 
@@ -245,6 +247,12 @@ int32 AEnemy::PlayDeathMontage()
 		DeathPose = Pose;
 	}
 	return Selection;
+}
+
+void AEnemy::AttackEnd()
+{
+	EnemyState = EEnemyState::EES_NoState;
+	CheckCombatTarget();
 }
 
 
@@ -448,7 +456,7 @@ void AEnemy::CheckPatrolTarget()
 		//this one is for having a delay between targets
 
 		//random value for the time
-		const float WaitTime = FMath::RandRange(WaitMin, WaitMax);
+		const float WaitTime = FMath::RandRange(PatrolWaitMin, PatrolWaitMax);
 
 
 

@@ -139,55 +139,71 @@ void ASlashCharacter::EKeyPressed()
 	//it will return null pointer if it is not overlapping
 	if (OverlappingWeapon)
 	{
-		//Im gonna ask what weapon type I have
-		EWeaponType WeaponType = OverlappingWeapon->GetWeaponType();
-
-		if (WeaponType == EWeaponType::EWT_OneHanded) {
-			//the we tell the weapon to get attached
-			OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
-			CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
-			isWeapon1 = true;
-		}
-		else if (WeaponType == EWeaponType::EWT_TwoHanded) {
-			OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocketWeaponB"), this, this);
-			CharacterState = ECharacterState::ECS_EquippedTwoHandedWeapon;
-			isWeapon2 = true;
-		}
-		/*
-		//we are gonna set owner and instigator on equip function
-		//actors can own others actors
-		OverlappingWeapon->SetOwner(this);
-		OverlappingWeapon->SetInstigator(this);//instigator is like ownder but always is a pawn
-		*/
-
-		
-		OverlappingItem = nullptr;
-		EquippedWeapon = OverlappingWeapon;
+		EquipWeapon(OverlappingWeapon);
 	}
 	else
 	{
 		if (CanDisarm())
 		{
-			PlayEquipMontage(FName("Unequip")); // here are the names, same names of the animation montage
-			
-			CharacterState = ECharacterState::ECS_Unequipped;
-
-			ActionState = EActionState::EAS_EquippingWeapon;
+			Disarm();
 
 		}
 		else if (CanArm())
 		{
-			PlayEquipMontage(FName("Equip"));// here are the names, same names of the animation montage
-			if (isWeapon1) {
-				CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
-			}
-			if (isWeapon2) {
-				CharacterState = ECharacterState::ECS_EquippedTwoHandedWeapon;
-			}
-			
-			ActionState = EActionState::EAS_EquippingWeapon;
+			Arm();
 		}
 	}
+}
+
+void ASlashCharacter::Arm()
+{
+	PlayEquipMontage(FName("Equip"));// here are the names, same names of the animation montage
+	if (isWeapon1) {
+		CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
+	}
+	if (isWeapon2) {
+		CharacterState = ECharacterState::ECS_EquippedTwoHandedWeapon;
+	}
+
+	ActionState = EActionState::EAS_EquippingWeapon;
+}
+
+void ASlashCharacter::Disarm()
+{
+	PlayEquipMontage(FName("Unequip")); // here are the names, same names of the animation montage
+
+	CharacterState = ECharacterState::ECS_Unequipped;
+
+	ActionState = EActionState::EAS_EquippingWeapon;
+}
+
+void ASlashCharacter::EquipWeapon(TObjectPtr<AWeapon>& Weapon)
+{
+	//Im gonna ask what weapon type I have
+
+	EWeaponType WeaponType = Weapon->GetWeaponType();
+
+	if (WeaponType == EWeaponType::EWT_OneHanded) {
+		//the we tell the weapon to get attached
+		Weapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
+		CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
+		isWeapon1 = true;
+	}
+	else if (WeaponType == EWeaponType::EWT_TwoHanded) {
+		Weapon->Equip(GetMesh(), FName("RightHandSocketWeaponB"), this, this);
+		CharacterState = ECharacterState::ECS_EquippedTwoHandedWeapon;
+		isWeapon2 = true;
+	}
+	/*
+	//we are gonna set owner and instigator on equip function
+	//actors can own others actors
+	OverlappingWeapon->SetOwner(this);
+	OverlappingWeapon->SetInstigator(this);//instigator is like ownder but always is a pawn
+	*/
+
+
+	OverlappingItem = nullptr;
+	EquippedWeapon = Weapon;
 }
 
 void ASlashCharacter::Attack()
@@ -241,7 +257,7 @@ bool ASlashCharacter::CanArm()
 		EquippedWeapon;
 }
 
-void ASlashCharacter::Disarm()
+void ASlashCharacter::AttachWeaponToBack()
 {
 	if (EquippedWeapon)
 	{
@@ -256,7 +272,7 @@ void ASlashCharacter::Disarm()
 	}
 }
 
-void ASlashCharacter::Arm()
+void ASlashCharacter::AttachWeaponToHand()
 {
 	if (EquippedWeapon)
 	{

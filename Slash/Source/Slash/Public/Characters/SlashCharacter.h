@@ -53,7 +53,7 @@ public:
 	// Sets default values for this character's properties
 	ASlashCharacter();
 	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	virtual void Tick(float DeltaTime) override;// nod needed but I will leave this here
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -98,6 +98,9 @@ protected:
 	void Look(const FInputActionValue& Value);
 	virtual void Jump() override;
 	void EKeyPressed();
+	void Arm();
+	void Disarm();
+	void EquipWeapon(TObjectPtr<AWeapon>& OverlappingWeapon);
 	virtual void Attack() override;
 	/*
 	void Dodge();
@@ -118,10 +121,10 @@ protected:
 	bool CanArm();
 
 	UFUNCTION(BlueprintCallable)
-	void Disarm();
+	void AttachWeaponToBack();
 
 	UFUNCTION(BlueprintCallable)
-	void Arm();
+	void AttachWeaponToHand();
 
 	UFUNCTION(BlueprintCallable)
 	void FinishEquipping();
