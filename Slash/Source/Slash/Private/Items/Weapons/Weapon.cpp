@@ -43,12 +43,36 @@ AWeapon::AWeapon()
 
 void AWeapon::Equip(TObjectPtr<USceneComponent> InParent, FName InScoketName, AActor* NewOwner, APawn* NewInstigator)
 {
+
+	ItemState = EItemState::EIS_Equiped;
 	//owner and instigator usually are the same
 	SetOwner(NewOwner);
 	SetInstigator(NewInstigator);
+	AttachMeshToSocket(InParent, InScoketName);	
+	DisableSphereCollision();
+	PlayEquipSound();	
+	DeactivateEmbers();
 
-	AttachMeshToSocket(InParent, InScoketName);
-	ItemState = EItemState::EIS_Equiped;
+}
+
+void AWeapon::DisableSphereCollision()
+{
+	if (Sphere)//comes from parent class
+	{
+		Sphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+}
+
+void AWeapon::DeactivateEmbers()
+{
+	if (EmbersEffect)
+	{
+		EmbersEffect->Deactivate();
+	}
+}
+
+void AWeapon::PlayEquipSound()
+{
 	if (EquipSound) //this should be setted on blueprint
 	{
 		UGameplayStatics::PlaySoundAtLocation(
@@ -57,15 +81,6 @@ void AWeapon::Equip(TObjectPtr<USceneComponent> InParent, FName InScoketName, AA
 			GetActorLocation()
 		);
 	}
-	if (Sphere)//comes from parent class
-	{
-		Sphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	}
-	if (EmbersEffect)
-	{
-		EmbersEffect->Deactivate();
-	}
-
 }
 
 void AWeapon::AttachMeshToSocket(TObjectPtr<USceneComponent> InParent, const FName InScoketName)
@@ -83,35 +98,60 @@ void AWeapon::BeginPlay()
 	WeaponBox->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnBoxOverlap);
 }
 
-void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	Super::OnSphereEndOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex);
-	//We will cast an ASlashCharacter which was included up above called OtherActor, 
-	//then create a pointer of an ASlashCharacter type into a variable called SlashCharacter
-	
-	
-	//All this part is done in AWeapon now
-
-	/*
-	TObjectPtr<ASlashCharacter> SlashCharacter = Cast<ASlashCharacter>(OtherActor); 
-	//checking if this variable is getting a valid addres, because its a pointer
-	if (SlashCharacter)
-	{	
-		//this is an structure and need to specify  variables when creaing
-		FAttachmentTransformRules TransformRules(EAttachmentRule::SnapToTarget, true);
-
-		//We can acces Item Mesh because is protected and not private in item.h
-		ItemMesh->AttachToComponent(SlashCharacter->GetMesh(), TransformRules, FName("RightHandSocket"));
-
-	}*/
-}
-
-void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	Super::OnSphereOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep,SweepResult);
-}
 
 void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+
+	if (ActorIsSameType(OtherActor)) return;
+
+
+	FHitResult BoxHit; // it creates a point on the hit location
+	BoxTrace(BoxHit);
+
+	if (BoxHit.GetActor())
+	{	
+		if (ActorIsSameType(BoxHit.GetActor())) return;
+		//aplying damage first then playing animation
+		UGameplayStatics::ApplyDamage(//this is a function from UGameplayStatics
+			BoxHit.GetActor(),
+			Damage,
+			GetInstigator()->GetController(),
+			this,
+			UDamageType::StaticClass()
+		);
+
+		ExecuteGetHit(BoxHit);
+		
+		/*
+		TObjectPtr<IHitInterface> HitInterface = Cast<IHitInterface>(BoxHit.GetActor());
+		if (HitInterface)
+		{
+			HitInterface->GetHit(BoxHit.ImpactPoint);
+		}
+		*/
+		CreateFields(BoxHit.ImpactPoint);
+				
+	}
+	
+}
+
+bool AWeapon::ActorIsSameType(AActor* OtherActor)
+{
+	return GetOwner()->ActorHasTag(TEXT("Enemy")) && OtherActor->ActorHasTag(TEXT("Enemy"));
+}
+
+void AWeapon::ExecuteGetHit(FHitResult& BoxHit)
+{
+	IHitInterface* HitInterface = Cast<IHitInterface>(BoxHit.GetActor());
+	if (HitInterface)
+	{
+		//HitInterface->GetHit(BoxHit.ImpactPoint);
+		// since we changes GetHit as blueprint native event
+		HitInterface->Execute_GetHit(BoxHit.GetActor(), BoxHit.ImpactPoint, GetOwner());
+	}
+}
+
+void AWeapon::BoxTrace(FHitResult& BoxHit)
 {
 	//Getting the actual position
 	const FVector Start = BoxTraceStart->GetComponentLocation();
@@ -126,54 +166,19 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 		ActorsToIgnore.AddUnique(Actor); // AddUnique check is the same item was already part of the array
 	}
 
-
-	FHitResult BoxHit; // it creates a point on the hit location
-
 	UKismetSystemLibrary::BoxTraceSingle(
 		this,
 		Start,
 		End,
-		FVector(5.f, 5.f, 5.f),
+		BoxTraveExtent,
 		BoxTraceStart->GetComponentRotation(),
 		ETraceTypeQuery::TraceTypeQuery1,
 		false, //trace by geometry
 		ActorsToIgnore,
-		EDrawDebugTrace::None,//it was: ForDuration but we dont want to see it anymore
+		bShowBoxDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None,//it was: ForDuration but we dont want to see it anymore
 		BoxHit,//this is an out paramater , this value will change,
 		true
 	);
-	
-	if (BoxHit.GetActor())
-	{	
-		//aplying damage first then playing animation
-		UGameplayStatics::ApplyDamage(//this is a function from UGameplayStatics
-			BoxHit.GetActor(),
-			Damage,
-			GetInstigator()->GetController(),
-			this,
-			UDamageType::StaticClass()
-		);
+	IgnoreActors.AddUnique(BoxHit.GetActor()); // Add this actor to ignore  in boxtracesingle up here 
 
-
-
-		IHitInterface* HitInterface = Cast<IHitInterface>(BoxHit.GetActor());
-		if (HitInterface)
-		{
-			//HitInterface->GetHit(BoxHit.ImpactPoint);
-			// since we changes GetHit as blueprint native event
-			HitInterface->Execute_GetHit(BoxHit.GetActor(), BoxHit.ImpactPoint);
-		}
-		IgnoreActors.AddUnique(BoxHit.GetActor()); // Add this actor to ignore  in boxtracesingle up here 
-		/*
-		TObjectPtr<IHitInterface> HitInterface = Cast<IHitInterface>(BoxHit.GetActor());
-		if (HitInterface)
-		{
-			HitInterface->GetHit(BoxHit.ImpactPoint);
-		}
-		*/
-		CreateFields(BoxHit.ImpactPoint);
-
-		
-	}
-	
 }

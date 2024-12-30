@@ -28,7 +28,7 @@ public:
 	//we dont use the line up there but
 
 	UFUNCTION(BlueprintNativeEvent)
-	void GetHit(const FVector& ImpactPoint);
+	void GetHit(const FVector& ImpactPoint, AActor* Hitter);
 
 
 

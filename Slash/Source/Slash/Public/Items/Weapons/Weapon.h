@@ -30,6 +30,12 @@ public:
 
 	void Equip(TObjectPtr<USceneComponent> InParent, FName InScoketName, AActor* NewOwner, APawn* NewInstigator);
 
+	void DisableSphereCollision();
+
+	void DeactivateEmbers();
+
+	void PlayEquipSound();
+
 	void AttachMeshToSocket(TObjectPtr<USceneComponent> InParent, const FName InScoketName);
 
 	//public to use this variable in SlashCharacters when collision ends
@@ -38,13 +44,13 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	//virtual if we are planning to override it on child class
-	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
-	virtual void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) override;
-	
-	
+		
 	UFUNCTION() // the ones above already are declared as UFUNCTION in parent class
 	void OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	bool ActorIsSameType(AActor* OtherActor);
+
+	void ExecuteGetHit(FHitResult& BoxHit);
 
 
 	UFUNCTION(BlueprintImplementableEvent)
@@ -52,6 +58,14 @@ protected:
 
 
 private:
+	void BoxTrace(FHitResult& BoxHit);
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	FVector BoxTraveExtent = FVector(5.f);
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	bool bShowBoxDebug = false;
+
 	//EditAnywhere when its something that you can set , and we want to change them
 	UPROPERTY(EditAnywhere, Category ="Weapon Properties")
 	TObjectPtr<USoundBase> EquipSound;

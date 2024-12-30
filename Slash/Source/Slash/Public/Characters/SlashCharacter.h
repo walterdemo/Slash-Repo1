@@ -57,11 +57,70 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
+	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter) override;
 	
 protected:
 	//void MoveForward(floatValue);
 
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+
+	//UPROPERTY(VisibleAnywhere)
+	//TObjectPtr<UCharMovementComponent> MovementComponent;
+
+	
+	/*
+	Input action properties and variables
+	*/
+	void MoveChar(const FInputActionValue& Value);
+	void Look(const FInputActionValue& Value);
+	virtual void Jump() override;
+	void EKeyPressed();
+	virtual void Attack() override;
+
+	/** Combat */
+	void EquipWeapon(TObjectPtr<AWeapon>& OverlappingWeapon);
+	//UFUNCTION(BlueprintCallable)// UFUNCTION only needed on BaseCharacter
+	virtual void AttackEnd() override;
+	virtual bool CanAttack() override;
+	bool CanDisarm();
+	bool CanArm();
+	void Arm();
+	void Disarm();
+	void PlayEquipMontage(const FName& SectionName);
+	
+	/*
+	void Dodge();
+	virtual void Attack() override;
+	CommentSomething here
+	*/
+
+	/*
+	* Play montage functions - this is called refactoring for avoid having to much code in one space
+	*/
+
+
+
+	//two handed weapon
+	bool isWeapon1 = false;
+	bool isWeapon2 = false;
+
+
+
+	
+	
+
+	UFUNCTION(BlueprintCallable)
+	void AttachWeaponToBack();
+
+	UFUNCTION(BlueprintCallable)
+	void AttachWeaponToHand();
+
+	UFUNCTION(BlueprintCallable)
+	void FinishEquipping();
+
+	//ENHANCED INPUT
 	/*
 	Input action properties and variables
 	*/
@@ -84,63 +143,15 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Input)
 	TObjectPtr<UInputAction> AttackAction;
 
-
-	//UPROPERTY(VisibleAnywhere)
-	//TObjectPtr<UCharMovementComponent> MovementComponent;
-
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-	/*
-	Input action properties and variables
-	*/
-	void MoveChar(const FInputActionValue& Value);
-	void Look(const FInputActionValue& Value);
-	virtual void Jump() override;
-	void EKeyPressed();
-	void Arm();
-	void Disarm();
-	void EquipWeapon(TObjectPtr<AWeapon>& OverlappingWeapon);
-	virtual void Attack() override;
-	/*
-	void Dodge();
-	virtual void Attack() override;
-	CommentSomething here
-	*/
-
-	/*
-	* Play montage functions - this is called refactoring for avoid having to much code in one space
-	*/
-
-	//UFUNCTION(BlueprintCallable)// UFUNCTION only needed on BaseCharacter
-	virtual void AttackEnd() override; 
-	virtual bool CanAttack() override;
-
-	void PlayEquipMontage(const FName& SectionName);
-	bool CanDisarm();
-	bool CanArm();
-
 	UFUNCTION(BlueprintCallable)
-	void AttachWeaponToBack();
+	void HitReactEnd();
 
-	UFUNCTION(BlueprintCallable)
-	void AttachWeaponToHand();
-
-	UFUNCTION(BlueprintCallable)
-	void FinishEquipping();
-
-
-	//two handed weapon
-	bool isWeapon1 = false;
-	bool isWeapon2 = false;
 
 
 private:
 
-	ECharacterState CharacterState = ECharacterState::ECS_Unequipped;
-	
-	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	EActionState ActionState = EActionState::EAS_Unoccupied;
+
+	/** Character components */
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USpringArmComponent> CameraBoom;
@@ -163,7 +174,12 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = Montages)
 	TObjectPtr<UAnimMontage> EquipMontage;
 
-	
+
+	ECharacterState CharacterState = ECharacterState::ECS_Unequipped;
+
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	EActionState ActionState = EActionState::EAS_Unoccupied;
+
 
 	//Animation Montage fot two handed weapon
 	UPROPERTY(EditDefaultsOnly, Category = Montages)
@@ -172,7 +188,7 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = Montages)
 	TObjectPtr<UAnimMontage> EquipMontage2;
 
-public:
+public://GETTER AND SETTER
 	//optimize code of a getter or setter in one line
 	FORCEINLINE void SetOverlappingItem(AItems* Item) { OverlappingItem = Item; }
 

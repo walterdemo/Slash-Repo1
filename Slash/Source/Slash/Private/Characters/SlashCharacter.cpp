@@ -2,12 +2,10 @@
 
 
 #include "Characters/SlashCharacter.h"
-
 //Enhanced input needed
 #include "Components/InputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
-
 
 //sringArm and camera
 #include "GameFramework/SpringArmComponent.h"
@@ -15,6 +13,9 @@
 
 //Setting Movement on character
 #include "GameFramework/CharacterMovementComponent.h"
+
+//for changing collision type
+#include "Components/StaticMeshComponent.h"
 
 //Setting fro groom
 #include "GroomComponent.h"
@@ -27,18 +28,24 @@
 #include "Animation/AnimMontage.h"
 
 //Accesing WeaponBox from Overlapping item
-#include "Components/BoxComponent.h"
+//#include "Components/BoxComponent.h" //NOT NEEDED casue its used in BaseCharacter from now on
 
 // Sets default values
 ASlashCharacter::ASlashCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	//PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false; //not using tick
 
 	//Setting movement on character, face orientation
 	GetCharacterMovement()->bOrientRotationToMovement = true; //checking the checkbox instead of blueprint
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 400.f, 0.f); //setting value instead of using blueprint
 
+	GetMesh()->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
+	GetMesh()->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Overlap);
+	GetMesh()->SetGenerateOverlapEvents(true);
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(GetRootComponent());
@@ -57,6 +64,61 @@ ASlashCharacter::ASlashCharacter()
 	
 
 }
+
+// Called every frame
+void ASlashCharacter::Tick(float DeltaTime)//no needed
+{
+	Super::Tick(DeltaTime);
+
+}
+
+// Called to bind functionality to input
+void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	if (TObjectPtr<UEnhancedInputComponent> EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
+	{
+		EnhancedInputComponent->BindAction(MovementAction, ETriggerEvent::Triggered, this, &ASlashCharacter::MoveChar);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Look);
+		//EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ABird::Look);
+
+		//binding actions
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Jump);
+		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ASlashCharacter::EKeyPressed);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Attack);
+	}
+
+
+}
+
+void ASlashCharacter::GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter)
+{
+	Super::GetHit_Implementation(ImpactPoint, Hitter);
+	SetWeaponCollisionEnabled(ECollisionEnabled::NoCollision); // in case is playing the animation montage and gets interrupted, notification about ending attack never happens and get stcuk
+	ActionState = EActionState::EAS_HitReaction;
+}
+
+// Called when the game starts or when spawned
+void ASlashCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	//TobjectPtr<APlayerController> PlayerController = Cast<APlayerController>(Controller);
+	//if (PlayerController)
+	if (TObjectPtr<APlayerController> PlayerController = Cast<APlayerController>(Controller))
+	{
+		if (TObjectPtr<UEnhancedInputLocalPlayerSubsystem> Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))//to save memory if(UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		{
+			Subsystem->AddMappingContext(SlashContext, 0);
+		}
+	}
+
+	Tags.Add(FName("EngageableTarget"));//Adding tags to  this char
+
+
+}
+
 
 void ASlashCharacter::MoveChar(const FInputActionValue& Value)
 {
@@ -99,26 +161,6 @@ void ASlashCharacter::Look(const FInputActionValue& Value)
 }
 
 
-// Called when the game starts or when spawned
-void ASlashCharacter::BeginPlay()
-{
-	Super::BeginPlay();
-
-	//TobjectPtr<APlayerController> PlayerController = Cast<APlayerController>(Controller);
-	//if (PlayerController)
-	if(TObjectPtr<APlayerController> PlayerController = Cast<APlayerController>(Controller))
-	{
-		if (TObjectPtr<UEnhancedInputLocalPlayerSubsystem> Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))//to save memory if(UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			Subsystem->AddMappingContext(SlashContext, 0);
-		}
-	}
-
-	Tags.Add(FName("SlashCharacter"));//Adding tags to  this char
-
-	
-}
-
 void ASlashCharacter::Jump()
 {
 	Super::Jump();
@@ -155,26 +197,14 @@ void ASlashCharacter::EKeyPressed()
 	}
 }
 
-void ASlashCharacter::Arm()
+void ASlashCharacter::Attack()
 {
-	PlayEquipMontage(FName("Equip"));// here are the names, same names of the animation montage
-	if (isWeapon1) {
-		CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
+	Super::Attack();
+	if (CanAttack()) // can Attack is a bool variable which determined the state of the character down below
+	{
+		PlayAttackMontage();
+		ActionState = EActionState::EAS_Attacking;
 	}
-	if (isWeapon2) {
-		CharacterState = ECharacterState::ECS_EquippedTwoHandedWeapon;
-	}
-
-	ActionState = EActionState::EAS_EquippingWeapon;
-}
-
-void ASlashCharacter::Disarm()
-{
-	PlayEquipMontage(FName("Unequip")); // here are the names, same names of the animation montage
-
-	CharacterState = ECharacterState::ECS_Unequipped;
-
-	ActionState = EActionState::EAS_EquippingWeapon;
 }
 
 void ASlashCharacter::EquipWeapon(TObjectPtr<AWeapon>& Weapon)
@@ -206,28 +236,6 @@ void ASlashCharacter::EquipWeapon(TObjectPtr<AWeapon>& Weapon)
 	EquippedWeapon = Weapon;
 }
 
-void ASlashCharacter::Attack()
-{
-	Super::Attack();
-	if (CanAttack()) // can Attack is a bool variable which determined the state of the character down below
-	{
-		PlayAttackMontage();
-		ActionState = EActionState::EAS_Attacking;
-	}
-}
-
-
-void ASlashCharacter::PlayEquipMontage(const FName& SectionName)
-{
-	TObjectPtr<UAnimInstance> AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance && EquipMontage)// EquipMontage variable that comes from blueprint Animation Montage
-	{
-		AnimInstance->Montage_Play(EquipMontage);
-		AnimInstance->Montage_JumpToSection(SectionName, EquipMontage);
-	}
-}
-
-
 void ASlashCharacter::AttackEnd()
 {
 	ActionState = EActionState::EAS_Unoccupied;
@@ -239,7 +247,6 @@ bool ASlashCharacter::CanAttack()
 	return ActionState == EActionState::EAS_Unoccupied &&
 		CharacterState != ECharacterState::ECS_Unequipped;
 }
-
 
 
 bool ASlashCharacter::CanDisarm()
@@ -256,6 +263,39 @@ bool ASlashCharacter::CanArm()
 		CharacterState == ECharacterState::ECS_Unequipped &&//here the difference with can disarm
 		EquippedWeapon;
 }
+
+void ASlashCharacter::Arm()
+{
+	PlayEquipMontage(FName("Equip"));// here are the names, same names of the animation montage
+	if (isWeapon1) {
+		CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
+	}
+	if (isWeapon2) {
+		CharacterState = ECharacterState::ECS_EquippedTwoHandedWeapon;
+	}
+
+	ActionState = EActionState::EAS_EquippingWeapon;
+}
+
+void ASlashCharacter::Disarm()
+{
+	PlayEquipMontage(FName("Unequip")); // here are the names, same names of the animation montage
+
+	CharacterState = ECharacterState::ECS_Unequipped;
+
+	ActionState = EActionState::EAS_EquippingWeapon;
+}
+
+void ASlashCharacter::PlayEquipMontage(const FName& SectionName)
+{
+	TObjectPtr<UAnimInstance> AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && EquipMontage)// EquipMontage variable that comes from blueprint Animation Montage
+	{
+		AnimInstance->Montage_Play(EquipMontage);
+		AnimInstance->Montage_JumpToSection(SectionName, EquipMontage);
+	}
+}
+
 
 void ASlashCharacter::AttachWeaponToBack()
 {
@@ -292,30 +332,11 @@ void ASlashCharacter::FinishEquipping()
 	ActionState = EActionState::EAS_Unoccupied;
 }
 
-
-// Called every frame
-void ASlashCharacter::Tick(float DeltaTime)
+void ASlashCharacter::HitReactEnd()
 {
-	Super::Tick(DeltaTime);
-
+	ActionState = EActionState::EAS_Unoccupied;
 }
 
-// Called to bind functionality to input
-void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	
-	if (TObjectPtr<UEnhancedInputComponent> EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
-	{
-		EnhancedInputComponent->BindAction(MovementAction, ETriggerEvent::Triggered, this, &ASlashCharacter::MoveChar);
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Look);
-		//EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ABird::Look);
-
-		//binding actions
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Jump);
-		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ASlashCharacter::EKeyPressed);
-		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Attack);
-	}
 
 
-}
+

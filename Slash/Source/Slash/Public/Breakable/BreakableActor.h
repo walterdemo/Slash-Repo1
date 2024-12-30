@@ -23,7 +23,7 @@ public:
 
 	//virtual void GetHit(const FVector& ImpactPoint) override;
 	//since GetHit is a Blueprint native event we should use this new which is internally generated
-	virtual void GetHit_Implementation(const FVector& ImpactPoint) override;
+	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter) override;
 
 
 protected:
