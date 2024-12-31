@@ -58,7 +58,9 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter) override;
-	
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
+
 protected:
 	//void MoveForward(floatValue);
 
@@ -78,7 +80,7 @@ protected:
 	virtual void Jump() override;
 	void EKeyPressed();
 	virtual void Attack() override;
-
+	
 	/** Combat */
 	void EquipWeapon(TObjectPtr<AWeapon>& OverlappingWeapon);
 	//UFUNCTION(BlueprintCallable)// UFUNCTION only needed on BaseCharacter

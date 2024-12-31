@@ -15,6 +15,9 @@
 //use sound with hitSound and emitter
 #include "Kismet/GameplayStatics.h"
 
+#include "Slash/DebugMacros.h"
+
+
 // Sets default values
 ABaseCharacter::ABaseCharacter()
 {
@@ -181,6 +184,43 @@ int32 ABaseCharacter::PlayAttackMontage()
 int32 ABaseCharacter::PlayDeathMontage()
 {
 	return PlayRandomMontageSections(DeathMontage, DeathMontageSections);
+}
+
+void ABaseCharacter::StopAttackMontage()
+{
+	TObjectPtr<UAnimInstance> AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance)
+	{
+		AnimInstance->Montage_Stop(0.25f, AttackMontage);
+	}
+}
+
+FVector ABaseCharacter::GetTranslationWarpTarget()
+{
+	
+	
+	if (CombatTarget == nullptr) return FVector();
+	
+	//we are finding a location which is not the enemy/combatTarget position but
+	//a position with an offset of WarpTargetDistance, so we rest the vectors and 
+	//multiply the normal with the offset so we have the vector offset resultant
+	const FVector CombatTargetLocation = CombatTarget->GetActorLocation();
+	const FVector Location = GetActorLocation();
+
+	FVector TargetToMe = (Location - CombatTargetLocation).GetSafeNormal();
+	TargetToMe *= WarpTargetDistance;
+
+
+	return CombatTargetLocation + TargetToMe;
+}
+
+FVector ABaseCharacter::GetRotationWarpTarget()
+{
+	if (CombatTarget)
+	{
+		return CombatTarget->GetActorLocation();
+	}
+	return FVector();
 }
 
 void ABaseCharacter::DisableCapsule()

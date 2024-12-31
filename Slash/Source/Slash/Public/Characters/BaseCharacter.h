@@ -30,7 +30,12 @@ public:
 	//translated
 	UFUNCTION(BlueprintCallable)
 	void SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled);
+
+	
 	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter) override;
+
+
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -58,10 +63,18 @@ protected:
 	void PlayHitSound(const FVector& ImpactPoint);
 	void SpawnHitParticles(const FVector& ImpactPoint);
 	virtual void HandleDamage(float DamageAmount);
-	void PlayMontageSection(UAnimMontage* Montage, const FName& SectionName);
-	int32 PlayRandomMontageSections(UAnimMontage* Montage, const TArray<FName>& SectionNames);//return int to know what montage is playint
 	virtual int32 PlayAttackMontage();
 	virtual int32 PlayDeathMontage();
+	void StopAttackMontage();
+
+
+	UFUNCTION(BlueprintCallable)
+	FVector GetTranslationWarpTarget();
+
+	UFUNCTION(BlueprintCallable)
+	FVector GetRotationWarpTarget();
+
+
 	void DisableCapsule();
 
 	UFUNCTION(BlueprintCallable)
@@ -100,4 +113,17 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = VisualEffects)
 	TObjectPtr<UParticleSystem> HitParticles;
+
+	UPROPERTY(BlueprintReadOnly, Category = Combat)
+	AActor* CombatTarget;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	double WarpTargetDistance = 75.f;
+
+
+private:
+	void PlayMontageSection(UAnimMontage* Montage, const FName& SectionName);
+	int32 PlayRandomMontageSections(UAnimMontage* Montage, const TArray<FName>& SectionNames);//return int to know what montage is playint
+
+
 };
