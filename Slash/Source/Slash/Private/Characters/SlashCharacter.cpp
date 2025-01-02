@@ -20,12 +20,23 @@
 //Setting fro groom
 #include "GroomComponent.h"
 
+//being able to acces attribute health values for input in HUD in initialize function
+#include "Components/AttributeComponent.h"
+
 //weapon and item 
 #include "Items/Items.h"
 #include "Items/Weapons/Weapon.h"
 
 //UAnimMontage https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Engine/Animation/UAnimMontage
 #include "Animation/AnimMontage.h"
+
+//being able o access HUD properties so I can access to its functions and set health and other values
+#include "HUD/SlashHUD.h"
+#include "HUD/SlashOverlay.h"
+
+
+#include "Items/Soul.h"
+#include "Items/Treasure.h"
 
 //Accesing WeaponBox from Overlapping item
 //#include "Components/BoxComponent.h" //NOT NEEDED casue its used in BaseCharacter from now on
@@ -96,13 +107,43 @@ void ASlashCharacter::GetHit_Implementation(const FVector& ImpactPoint, AActor* 
 {
 	Super::GetHit_Implementation(ImpactPoint, Hitter);
 	SetWeaponCollisionEnabled(ECollisionEnabled::NoCollision); // in case is playing the animation montage and gets interrupted, notification about ending attack never happens and get stcuk
-	ActionState = EActionState::EAS_HitReaction;
+	//ActionState = EActionState::EAS_HitReaction;
+	if (Attributes && Attributes->GetHealthPercent() > 0.f)
+	{
+		ActionState = EActionState::EAS_HitReaction;//call hit reaction only if character us are alive
+	}
+
 }
 
 float ASlashCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	HandleDamage(DamageAmount);
+	SetHUDHealth();//updating HUD
 	return DamageAmount;
+}
+
+void ASlashCharacter::SetOverlappingItem(AItems* Item)
+{
+	OverlappingItem = Item;
+}
+
+void ASlashCharacter::AddSouls(ASoul* Soul) // this function is overriding function in PickupInterface and is called in overlap function inside soul
+{
+	//UE_LOG(LogTemp, Warning, TEXT("ASlashCharacter::AddSouls"));
+	if (Attributes && SlashOverlay)
+	{
+		Attributes->AddSouls(Soul->GetSouls());
+		SlashOverlay->SetSouls(Attributes->GetSouls());
+	}
+}
+
+void ASlashCharacter::AddGold(ATreasure* Treasure)// this function is overriding function in PickupInterface and is called in overlap function inside soul
+{
+	if (Attributes && SlashOverlay)
+	{
+		Attributes->AddGold(Treasure->GetGold());
+		SlashOverlay->SetGold(Attributes->GetGold());
+	}
 }
 
 // Called when the game starts or when spawned
@@ -122,7 +163,7 @@ void ASlashCharacter::BeginPlay()
 
 	Tags.Add(FName("EngageableTarget"));//Adding tags to  this char
 
-
+	InitializeSlashOverlay();
 }
 
 
@@ -169,12 +210,10 @@ void ASlashCharacter::Look(const FInputActionValue& Value)
 
 void ASlashCharacter::Jump()
 {
-	Super::Jump();
-	/*
 	if (IsUnoccupied())
 	{
 		Super::Jump();
-	}*/
+	}
 }
 
 void ASlashCharacter::EKeyPressed()
@@ -302,6 +341,13 @@ void ASlashCharacter::PlayEquipMontage(const FName& SectionName)
 	}
 }
 
+void ASlashCharacter::Die()
+{
+	Super::Die();
+	ActionState = EActionState::EAS_Dead;
+	DisableMeshCollision();
+}
+
 
 void ASlashCharacter::AttachWeaponToBack()
 {
@@ -343,6 +389,39 @@ void ASlashCharacter::HitReactEnd()
 	ActionState = EActionState::EAS_Unoccupied;
 }
 
+bool ASlashCharacter::IsUnoccupied()
+{
+	return ActionState == EActionState::EAS_Unoccupied;
+}
+
+void ASlashCharacter::InitializeSlashOverlay()
+{
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController)
+	{
+		ASlashHUD* SlashHUD = Cast<ASlashHUD>(PlayerController->GetHUD());
+		if (SlashHUD)
+		{
+			{
+				SlashOverlay = SlashHUD->GetSlashOverlay();//here if we dont set an slashoverlay type hud into our setup, we wont be able to cast it here
+				if (SlashOverlay && Attributes)
+				{
+					SlashOverlay->SetHealthBarPercent(Attributes->GetHealthPercent());
+					SlashOverlay->SetStaminaBarPercent(1.f);
+					SlashOverlay->SetGold(0);
+					SlashOverlay->SetSouls(0);
+				}
+			}
+		}
+	}
+}
 
 
 
+void ASlashCharacter::SetHUDHealth()
+{
+	if (SlashOverlay && Attributes)
+	{
+		SlashOverlay->SetHealthBarPercent(Attributes->GetHealthPercent());
+	}
+}

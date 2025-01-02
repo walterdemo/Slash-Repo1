@@ -39,10 +39,16 @@ void ABaseCharacter::BeginPlay()
 
 void ABaseCharacter::Attack()
 {
+	if (CombatTarget && CombatTarget->ActorHasTag(FName("Dead"))) //clear target is its dead
+	{
+		CombatTarget = nullptr;
+	}
 }
 
 void ABaseCharacter::Die()
 {
+	Tags.Add(FName("Dead"));
+	PlayDeathMontage();
 }
 
 bool ABaseCharacter::CanAttack()
@@ -53,6 +59,11 @@ bool ABaseCharacter::CanAttack()
 bool ABaseCharacter::IsAlive()
 {
 	return Attributes && Attributes->isAlive();
+}
+
+void ABaseCharacter::DisableMeshCollision()
+{
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ABaseCharacter::PlayHitSound(const FVector& ImpactPoint)
@@ -94,7 +105,7 @@ void ABaseCharacter::PlayMontageSection(UAnimMontage* Montage, const FName& Sect
 
 }
 
-int32 ABaseCharacter::PlayRandomMontageSections(UAnimMontage* Montage, const TArray<FName>& SectionNames)
+int32 ABaseCharacter::PlayRandomMontageSection(UAnimMontage* Montage, const TArray<FName>& SectionNames)
 {
 	if (SectionNames.Num() <= 0) return -1;
 	const int32 MaxSectionIndex = SectionNames.Num() - 1;
@@ -177,13 +188,19 @@ void ABaseCharacter::DirectionalHitReact(const FVector& ImpactPoint)
 int32 ABaseCharacter::PlayAttackMontage()
 {	
 	//Super::PlayAttackMontage();
-	return PlayRandomMontageSections(AttackMontage, AttackMontageSections);
+	return PlayRandomMontageSection(AttackMontage, AttackMontageSections);
 
 }
 
 int32 ABaseCharacter::PlayDeathMontage()
 {
-	return PlayRandomMontageSections(DeathMontage, DeathMontageSections);
+	const int32 Selection = PlayRandomMontageSection(DeathMontage, DeathMontageSections);
+	TEnumAsByte<EDeathPose> Pose(Selection);
+	if (Pose < EDeathPose::EDP_MAX)
+	{
+		DeathPose = Pose;
+	}
+	return Selection;
 }
 
 void ABaseCharacter::StopAttackMontage()

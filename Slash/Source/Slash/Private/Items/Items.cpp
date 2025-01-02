@@ -9,9 +9,13 @@
 
 //Sphere component
 #include "Components/SphereComponent.h"
-#include "Characters/SlashCharacter.h"
-
+//#include "Characters/SlashCharacter.h"
+#include "Interfaces/PickupInterface.h"
 #include "NiagaraComponent.h"
+
+#include "NiagaraFunctionLibrary.h"//using objects of type niagara (input objects)
+#include "Kismet/GameplayStatics.h"// 
+
 // Sets default values
 AItems::AItems()
 {
@@ -28,8 +32,8 @@ AItems::AItems()
 	Sphere = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere"));
 	Sphere->SetupAttachment(GetRootComponent());
 
-	EmbersEffect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Embers"));
-	EmbersEffect->SetupAttachment(GetRootComponent());
+	ItemEffect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Embers"));
+	ItemEffect->SetupAttachment(GetRootComponent());
 }
 
 // Called when the game starts or when spawned
@@ -115,11 +119,14 @@ float AItems::TransformedCos()
 void AItems::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	//TODO we have to fully understand how this works he castin
+	
+	/*before using interfaces
 	TObjectPtr<ASlashCharacter> SlashCharacter = Cast<ASlashCharacter>(OtherActor);
 	if (SlashCharacter)
 	{
 		SlashCharacter->SetOverlappingItem(this);
 	}
+	*/
 	/*
 	const FString OtherActorName = OtherActor->GetName();
 	if (GEngine)
@@ -127,16 +134,26 @@ void AItems::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* O
 		GEngine->AddOnScreenDebugMessage(1, 1.f, FColor::Red, OtherActorName);
 	}
 	*/
+
+	//IMPORTANCE OF INTERFACE
+	//if there are so many actor that need to be casted FOR using a function or propertie
+	//we can use the same interface to cast them so it gets into a better way and more generic way of doing it instead of casting different actors (which would need to be included on the top)
+	IPickupInterface* PickupInterface = Cast<IPickupInterface>(OtherActor);//the actor SlashCharacter now is child of I pickupinterface so it can be casted as this
+	if (PickupInterface)
+	{
+		PickupInterface->SetOverlappingItem(this);
+	}
 }
 
 void AItems::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	
+	/*
 	TObjectPtr<ASlashCharacter> SlashCharacter = Cast<ASlashCharacter>(OtherActor);
 	if (SlashCharacter)
 	{
 		SlashCharacter->SetOverlappingItem(nullptr);
 	}
+	*/
 
 	//const FString OtherActorNameEnd = OtherActor->GetName();
 	/*
@@ -145,6 +162,40 @@ void AItems::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 		GEngine->AddOnScreenDebugMessage(1, 1.f, FColor::Green, OtherActorNameEnd);
 	}
 	*/
+
+	//IMPORTANCE OF INTERFACE
+	//if there are so many actor that need to be casted FOR using a function or propertie
+	//we can use the same interface to cast them so it gets into a better way and more generic way of doing it instead of casting different actors (which would need to be included on the top)
+
+
+	IPickupInterface* PickupInterface = Cast<IPickupInterface>(OtherActor);
+	if (PickupInterface)
+	{
+		PickupInterface->SetOverlappingItem(nullptr);
+	}
+}
+
+void AItems::SpawnPickupSystem()
+{
+	if (PickupEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			this,
+			PickupEffect,
+			GetActorLocation()
+		);
+	}
+}
+void AItems::SpawnPickupSound()
+{
+	if (PickupSound)
+	{
+		UGameplayStatics::SpawnSoundAtLocation(
+			this,
+			PickupSound,
+			GetActorLocation()
+		);
+	}
 }
 
 // Called every frame

@@ -13,7 +13,7 @@
 
 
 #include <AMD/Amf/core/Variant.h>
-
+#include "Interfaces/PickupInterface.h"
 #include "SlashCharacter.generated.h"
 
 
@@ -29,9 +29,12 @@ class USpringArmComponent;
 class UCameraComponent;
 class UGroomComponent;
 
+class ATreasure;
+class ASoul;
 class AItems;
 class UAnimMontage;
 
+class USlashOverlay;
 
 /*
 //We will declare it on CharacterTypesHeader.h
@@ -44,8 +47,13 @@ enum class ECharacterState : uint8 //u because it's unsigned no negative values
 	ECS_EquippedTwoHandedWeapon UMETA(DisplayName = "Equipped Two-Handed Weapon")
 };*/
 
+
+//IMPORTANCE OF INTERFACE
+//if there are so many actor that need to be casted FOR using a function or propertie
+//we can use the same interface to cast them so it gets into a better way and more generic way of doing it instead of casting different actors (which would need to be included on the top)
+
 UCLASS()
-class SLASH_API ASlashCharacter : public ABaseCharacter // changed from ACharacter
+class SLASH_API ASlashCharacter : public ABaseCharacter, public IPickupInterface // changed from ACharacter
 {
 	GENERATED_BODY()
 
@@ -60,6 +68,9 @@ public:
 	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter) override;
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
+	virtual void SetOverlappingItem(AItems* Item) override;
+	virtual void AddSouls(ASoul* Soul) override;
+	virtual void AddGold(ATreasure* Treasure) override;
 
 protected:
 	//void MoveForward(floatValue);
@@ -92,6 +103,8 @@ protected:
 	void Disarm();
 	void PlayEquipMontage(const FName& SectionName);
 	
+	virtual void Die() override;
+
 	/*
 	void Dodge();
 	virtual void Attack() override;
@@ -151,7 +164,9 @@ protected:
 
 
 private:
-
+	bool IsUnoccupied();
+	void InitializeSlashOverlay();
+	void SetHUDHealth();
 
 	/** Character components */
 
@@ -190,13 +205,16 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = Montages)
 	TObjectPtr<UAnimMontage> EquipMontage2;
 
+	UPROPERTY()
+	USlashOverlay* SlashOverlay;
+
 public://GETTER AND SETTER
 	//optimize code of a getter or setter in one line
-	FORCEINLINE void SetOverlappingItem(AItems* Item) { OverlappingItem = Item; }
+	//FORCEINLINE void SetOverlappingItem(AItems* Item) { OverlappingItem = Item; } //we are using interface now
 
 	//the const means that this function will not be able to change anything in it, maybe the Enum
 	FORCEINLINE ECharacterState GetCharacterState() const { return CharacterState; } //Getting the value for being able to know it when it is called in SlashAnimInstance
 
-
+	FORCEINLINE EActionState GetActionState() const { return ActionState; }
 
 };

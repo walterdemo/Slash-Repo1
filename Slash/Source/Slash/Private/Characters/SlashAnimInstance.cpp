@@ -27,6 +27,9 @@ void USlashAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		GroundSpeed = UKismetMathLibrary::VSizeXY(SlashCharacterMovement->Velocity);
 		IsFalling = SlashCharacterMovement->IsFalling();
 		CharacterState = SlashCharacter->GetCharacterState();
+		ActionState = SlashCharacter->GetActionState(); //can be seeing on the blueprint node editor
+		DeathPose = SlashCharacter->GetDeathPose();
+
 	}
 
 }

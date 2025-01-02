@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/HitInterface.h" // inheritance from another parent
-
+#include "Characters/CharacterTypes.h"
 #include "BaseCharacter.generated.h"
 
 
@@ -59,6 +59,8 @@ protected:
 
 	virtual bool CanAttack();
 	bool IsAlive();
+
+	void DisableMeshCollision();
 
 	void PlayHitSound(const FVector& ImpactPoint);
 	void SpawnHitParticles(const FVector& ImpactPoint);
@@ -120,10 +122,12 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	double WarpTargetDistance = 75.f;
 
-
+	UPROPERTY(BlueprintReadOnly)
+	TEnumAsByte<EDeathPose> DeathPose; // to be able to call it on blueprint
 private:
 	void PlayMontageSection(UAnimMontage* Montage, const FName& SectionName);
-	int32 PlayRandomMontageSections(UAnimMontage* Montage, const TArray<FName>& SectionNames);//return int to know what montage is playint
+	int32 PlayRandomMontageSection(UAnimMontage* Montage, const TArray<FName>& SectionNames);//return int to know what montage is playint
 
-
+public:
+	FORCEINLINE TEnumAsByte<EDeathPose> GetDeathPose() const { return DeathPose; } //getter for DeathPose
 };

@@ -11,5 +11,8 @@ public class SlashEditorTarget : TargetRules
 		DefaultBuildSettings = BuildSettingsVersion.V2;
 
 		ExtraModuleNames.AddRange( new string[] { "Slash" } );
-	}
+        
+		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_2;//
+
+    }
 }

@@ -10,6 +10,8 @@
 #include "Components/AttributeComponent.h"
 #include "HUD/HealthBarComponent.h"
 #include "Items/Weapons/Weapon.h"
+#include "Items/Soul.h"
+
 
 AEnemy::AEnemy()
 {
@@ -87,19 +89,35 @@ void AEnemy::BeginPlay()
 }
 void AEnemy::Die()
 {
+	Super::Die();
 	EnemyState = EEnemyState::EES_Dead;
-	PlayDeathMontage();
+	//PlayDeathMontage();//called from super
 	ClearAttackTimer();
 	HideHealthBar();
 	DisableCapsule();
 	SetLifeSpan(DeathLifeSpan);
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	SetWeaponCollisionEnabled(ECollisionEnabled::NoCollision);
+	SpawnSoul();
+}
+
+void AEnemy::SpawnSoul()
+{
+	UWorld* World = GetWorld();
+	if (World && SoulClass && Attributes)//soulClass called form engine propertie Niagara type and attribute set on parent class BaseCharacter
+	{
+		ASoul* SpawnedSoul = World->SpawnActor<ASoul>(SoulClass, GetActorLocation(), GetActorRotation());
+		if (SpawnedSoul)
+		{
+			SpawnedSoul->SetSouls(Attributes->GetSouls());//I'll be able to set the value of the soul that spawn after death here
+		}
+	}
 }
 void AEnemy::Attack()
 {
-	EnemyState = EEnemyState::EES_Engaged;
 	Super::Attack();
+	if (CombatTarget == nullptr) return; // if in super function set target null cause its dead
+	EnemyState = EEnemyState::EES_Engaged;
 	PlayAttackMontage();
 }
 bool AEnemy::CanAttack()
@@ -124,6 +142,7 @@ void AEnemy::HandleDamage(float DamageAmount)
 		HealthBarWidget->SetHealthPercent(Attributes->GetHealthPercent());
 	}
 }
+/*//called from the baseCharacter now
 int32 AEnemy::PlayDeathMontage()
 {
 	const int32 Selection = Super::PlayDeathMontage();
@@ -134,6 +153,7 @@ int32 AEnemy::PlayDeathMontage()
 	}
 	return Selection;
 }
+*/
 void AEnemy::InitializeEnemy()
 {
 	EnemyController = Cast<AAIController>(GetController());

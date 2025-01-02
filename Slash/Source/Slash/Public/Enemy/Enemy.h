@@ -39,14 +39,16 @@ protected:
 	/** </AActor> */
 	/** <ABaseCharacter> */
 	virtual void Die() override;
+	void SpawnSoul();
 	virtual void Attack() override;
 	virtual bool CanAttack() override;
 	virtual void AttackEnd() override;
 	virtual void HandleDamage(float DamageAmount) override;
-	virtual int32 PlayDeathMontage() override;
+	//virtual int32 PlayDeathMontage() override; //not needed is gonna be called from the BaseCaracter
+
 	/** </ABaseCharacter> */
-	UPROPERTY(BlueprintReadOnly)
-	TEnumAsByte<EDeathPose> DeathPose;
+	//UPROPERTY(BlueprintReadOnly)
+	//TEnumAsByte<EDeathPose> DeathPose; //not needed is gonna be called from the BaseCaracter
 	UPROPERTY(BlueprintReadOnly)
 	EEnemyState EnemyState = EEnemyState::EES_Patrolling;
 
@@ -135,4 +137,6 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	float DeathLifeSpan = 8.f;
 
+	UPROPERTY(EditAnywhere, Category = Combat)
+	TSubclassOf<class ASoul> SoulClass;
 };
