@@ -13,6 +13,8 @@
 #include "Items/Soul.h"
 
 
+#include "Navigation/PathFollowingComponent.h"
+
 AEnemy::AEnemy()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -103,12 +105,15 @@ void AEnemy::Die()
 
 void AEnemy::SpawnSoul()
 {
+	
 	UWorld* World = GetWorld();
 	if (World && SoulClass && Attributes)//soulClass called form engine propertie Niagara type and attribute set on parent class BaseCharacter
 	{
+		UE_LOG(LogTemp, Warning, TEXT("SpawnSouls"));
 		ASoul* SpawnedSoul = World->SpawnActor<ASoul>(SoulClass, GetActorLocation(), GetActorRotation());
 		if (SpawnedSoul)
-		{
+		{	
+			UE_LOG(LogTemp, Warning, TEXT("SettingValueToSoulsWhenEnemyDies"));
 			SpawnedSoul->SetSouls(Attributes->GetSouls());//I'll be able to set the value of the soul that spawn after death here
 		}
 	}

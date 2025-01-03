@@ -124,8 +124,10 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	TEnumAsByte<EDeathPose> DeathPose; // to be able to call it on blueprint
-private:
+
 	void PlayMontageSection(UAnimMontage* Montage, const FName& SectionName);
+private:
+	
 	int32 PlayRandomMontageSection(UAnimMontage* Montage, const TArray<FName>& SectionNames);//return int to know what montage is playint
 
 public:

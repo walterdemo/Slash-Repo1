@@ -46,7 +46,7 @@ ASlashCharacter::ASlashCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	//PrimaryActorTick.bCanEverTick = true;
-	PrimaryActorTick.bCanEverTick = false; //not using tick
+	PrimaryActorTick.bCanEverTick = true; //not using tick
 
 	//Setting movement on character, face orientation
 	GetCharacterMovement()->bOrientRotationToMovement = true; //checking the checkbox instead of blueprint
@@ -79,8 +79,12 @@ ASlashCharacter::ASlashCharacter()
 // Called every frame
 void ASlashCharacter::Tick(float DeltaTime)//no needed
 {
-	Super::Tick(DeltaTime);
-
+	//Super::Tick(DeltaTime);
+	if (Attributes && SlashOverlay)
+	{
+		Attributes->RegenStamina(DeltaTime);//every tick
+		SlashOverlay->SetStaminaBarPercent(Attributes->GetStaminaPercent());//update the overlay
+	}
 }
 
 // Called to bind functionality to input
@@ -98,6 +102,7 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Jump);
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ASlashCharacter::EKeyPressed);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Attack);
+		EnhancedInputComponent->BindAction(DodgeAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Dodge);
 	}
 
 
@@ -108,8 +113,9 @@ void ASlashCharacter::GetHit_Implementation(const FVector& ImpactPoint, AActor* 
 	Super::GetHit_Implementation(ImpactPoint, Hitter);
 	SetWeaponCollisionEnabled(ECollisionEnabled::NoCollision); // in case is playing the animation montage and gets interrupted, notification about ending attack never happens and get stcuk
 	//ActionState = EActionState::EAS_HitReaction;
-	if (Attributes && Attributes->GetHealthPercent() > 0.f)
+	if (Attributes && Attributes->GetHealthPercent() > 0.f) // is Alive
 	{
+		
 		ActionState = EActionState::EAS_HitReaction;//call hit reaction only if character us are alive
 	}
 
@@ -132,18 +138,31 @@ void ASlashCharacter::AddSouls(ASoul* Soul) // this function is overriding funct
 	//UE_LOG(LogTemp, Warning, TEXT("ASlashCharacter::AddSouls"));
 	if (Attributes && SlashOverlay)
 	{
-		Attributes->AddSouls(Soul->GetSouls());
-		SlashOverlay->SetSouls(Attributes->GetSouls());
+		//UE_LOG(LogTemp, Warning, TEXT("AddingSouls"));
+		Attributes->AddSouls(Soul->GetSouls()); //Get souls it gets the value of the soul
+		SlashOverlay->SetSouls(Attributes->GetSouls());//get soul it get the acumulated amount of soul
 	}
 }
 
 void ASlashCharacter::AddGold(ATreasure* Treasure)// this function is overriding function in PickupInterface and is called in overlap function inside soul
 {
 	if (Attributes && SlashOverlay)
-	{
+	{	
+		//UE_LOG(LogTemp, Warning, TEXT("AddingGold"));
 		Attributes->AddGold(Treasure->GetGold());
 		SlashOverlay->SetGold(Attributes->GetGold());
 	}
+}
+
+void ASlashCharacter::AddHealth(APotion* Potion)
+{
+	if (Attributes && SlashOverlay)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AddingHealth"));
+		Attributes->AddHealth(Potion->GetHealth());
+		SlashOverlay->SetHealthBarPercent(Attributes->GetHealthPercent());
+	}
+
 }
 
 // Called when the game starts or when spawned
@@ -252,6 +271,21 @@ void ASlashCharacter::Attack()
 	}
 }
 
+void ASlashCharacter::Dodge()
+{
+	if (IsOccupied() || !HasEnoughStamina()) return;//if is occupied or doenst have enough stamine it doesnt make anything
+
+	PlayDodgeMontage();
+	ActionState = EActionState::EAS_Dodge;
+
+	if (Attributes && SlashOverlay)
+	{
+		Attributes->UseStamina(Attributes->GetDodgeCost());
+		SlashOverlay->SetStaminaBarPercent(Attributes->GetStaminaPercent());
+	}
+
+}
+
 void ASlashCharacter::EquipWeapon(TObjectPtr<AWeapon>& Weapon)
 {
 	//Im gonna ask what weapon type I have
@@ -341,11 +375,25 @@ void ASlashCharacter::PlayEquipMontage(const FName& SectionName)
 	}
 }
 
+void ASlashCharacter::PlayDodgeMontage()
+{
+	PlayMontageSection(DodgeMontage, "Default");
+}
+
 void ASlashCharacter::Die()
 {
 	Super::Die();
 	ActionState = EActionState::EAS_Dead;
 	DisableMeshCollision();
+}
+
+bool ASlashCharacter::HasEnoughStamina()
+{
+	return Attributes && Attributes->GetStamina() > Attributes->GetDodgeCost();
+}
+bool ASlashCharacter::IsOccupied()
+{
+	return ActionState != EActionState::EAS_Unoccupied;
 }
 
 
@@ -386,6 +434,12 @@ void ASlashCharacter::FinishEquipping()
 
 void ASlashCharacter::HitReactEnd()
 {
+	ActionState = EActionState::EAS_Unoccupied;
+}
+
+void ASlashCharacter::DodgeEnd()
+{
+	//Super::DodgeEnd();//on in the lesson this functioin comes  from BaseCharacter
 	ActionState = EActionState::EAS_Unoccupied;
 }
 

@@ -61,7 +61,7 @@ public:
 	// Sets default values for this character's properties
 	ASlashCharacter();
 	// Called every frame
-	virtual void Tick(float DeltaTime) override;// nod needed but I will leave this here
+	virtual void Tick(float DeltaTime) override;// nod needed but I will leave this here,<- is needed for update stamina now
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -71,7 +71,7 @@ public:
 	virtual void SetOverlappingItem(AItems* Item) override;
 	virtual void AddSouls(ASoul* Soul) override;
 	virtual void AddGold(ATreasure* Treasure) override;
-
+	virtual void AddHealth(APotion* Potion) override;
 protected:
 	//void MoveForward(floatValue);
 
@@ -91,7 +91,7 @@ protected:
 	virtual void Jump() override;
 	void EKeyPressed();
 	virtual void Attack() override;
-	
+	void Dodge();
 	/** Combat */
 	void EquipWeapon(TObjectPtr<AWeapon>& OverlappingWeapon);
 	//UFUNCTION(BlueprintCallable)// UFUNCTION only needed on BaseCharacter
@@ -102,8 +102,12 @@ protected:
 	void Arm();
 	void Disarm();
 	void PlayEquipMontage(const FName& SectionName);
-	
+	void PlayDodgeMontage();
 	virtual void Die() override;
+
+
+	bool HasEnoughStamina();
+	bool IsOccupied();
 
 	/*
 	void Dodge();
@@ -158,10 +162,14 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Input)
 	TObjectPtr<UInputAction> AttackAction;
 
+	UPROPERTY(EditAnywhere, Category = Input)
+	TObjectPtr<UInputAction> DodgeAction; //inputAction
+
 	UFUNCTION(BlueprintCallable)
 	void HitReactEnd();
 
-
+	UFUNCTION(BlueprintCallable)
+	virtual void DodgeEnd();
 
 private:
 	bool IsUnoccupied();
@@ -204,6 +212,11 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = Montages)
 	TObjectPtr<UAnimMontage> EquipMontage2;
+
+	UPROPERTY(EditDefaultsOnly, Category = Montages)
+	TObjectPtr<UAnimMontage> DodgeMontage;
+
+	
 
 	UPROPERTY()
 	USlashOverlay* SlashOverlay;

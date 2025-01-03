@@ -137,7 +137,9 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 
 bool AWeapon::ActorIsSameType(AActor* OtherActor)
 {
-	return GetOwner()->ActorHasTag(TEXT("Enemy")) && OtherActor->ActorHasTag(TEXT("Enemy"));
+	//return GetOwner()->ActorHasTag(TEXT("Enemy")) && OtherActor->ActorHasTag(TEXT("Enemy"));
+
+	return (GetOwner()->ActorHasTag(TEXT("Enemy")) && OtherActor->ActorHasTag(TEXT("Enemy")) || GetOwner()->ActorHasTag(TEXT("EngageableTarget")) && OtherActor->ActorHasTag(TEXT("EngageableTarget")));
 }
 
 void AWeapon::ExecuteGetHit(FHitResult& BoxHit)
@@ -165,7 +167,7 @@ void AWeapon::BoxTrace(FHitResult& BoxHit)
 	{
 		ActorsToIgnore.AddUnique(Actor); // AddUnique check is the same item was already part of the array
 	}
-
+	
 	UKismetSystemLibrary::BoxTraceSingle(
 		this,
 		Start,

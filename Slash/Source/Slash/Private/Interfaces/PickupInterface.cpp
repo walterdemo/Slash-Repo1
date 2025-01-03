@@ -17,6 +17,6 @@ void IPickupInterface::AddGold(ATreasure* Treasure)
 {
 }
 
-void IPickupInterface::AddGold(ATreasure* Treasure)
+void IPickupInterface::AddHealth(APotion* Potion)
 {
 }

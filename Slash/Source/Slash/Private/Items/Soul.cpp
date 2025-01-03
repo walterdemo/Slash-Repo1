@@ -11,7 +11,7 @@ void ASoul::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 	if (PickupInterface)
 	{
 		PickupInterface->AddSouls(this);
-		SpawnPickupSystem();//from AItem parent will habilitate system for being picked from the character when overlapping
+		SpawnPickupSystem();//from AItem parent will habilitate system for being picked from the character when overlapping to add some effect
 		SpawnPickupSound();//from AItem parent will habilitate system for sound when being picked from the character when overlapping
 		Destroy();//will dissapear afeter being picked
 	}
